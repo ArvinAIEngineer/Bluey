@@ -449,14 +449,17 @@
     // READ URL PARAMS
     const params = new URLSearchParams(window.location.search);
     const itmId = params.get('item') || 'biscuit';
-    let ITEM_DEF = window.ITEMS[itmId] || window.ITEMS['biscuit'];
+    let ITEM_DEF = window.ITEMS[itmId];
 
-    // Robust fallback using URL params if specific definition not found
-    if (!window.ITEMS[itmId]) {
-      ITEM_DEF = Object.assign({}, ITEM_DEF, {
-        name: params.get('label') || ITEM_DEF.name,
-        emoji: params.get('emoji') || ITEM_DEF.emoji
-      });
+    // Final safety: if for some reason the ID is missing, we try a generic builder
+    // but the user wants the specific item, so we prioritize the catalog.
+    if (!ITEM_DEF) {
+      ITEM_DEF = {
+        id: itmId,
+        name: params.get('label') || itmId,
+        emoji: params.get('emoji') || '📦',
+        build: window.ITEMS['biscuit'].build // Still need a builder to avoid crash
+      };
     }
 
     const TOTAL = parseInt(params.get('count')) || 12;

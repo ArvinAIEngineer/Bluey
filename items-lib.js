@@ -22,6 +22,8 @@
     biscuit: new THREE.MeshStandardMaterial({ color: 0xeebb77, roughness: 0.9 }),
     choc: new THREE.MeshStandardMaterial({ color: 0x3e1800, roughness: 0.9 }),
     stem: new THREE.MeshStandardMaterial({ color: 0x228b22, roughness: 0.9 }),
+    teal: new THREE.MeshStandardMaterial({ color: 0x008080, roughness: 0.7 }),
+    darkgreen: new THREE.MeshStandardMaterial({ color: 0x006400, roughness: 0.9 }),
   };
 
   // Helper to build compound items
@@ -171,6 +173,242 @@
       const w = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), M.green);
       w.scale.set(1.2, 0.8, 1.2); g.add(w);
       return g;
+    },
+    cupcake: () => {
+      const g = buildGroup();
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.2, 12), M.purple);
+      base.position.y = -0.1; g.add(base);
+      const top = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), M.pink);
+      top.position.y = 0.1; top.scale.y = 0.75; g.add(top);
+      return g;
+    },
+    donut: () => {
+      const g = buildGroup();
+      const t = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.1, 12, 24), M.orange);
+      t.rotation.x = Math.PI / 2; g.add(t);
+      return g;
+    },
+    lollipop: () => {
+      const g = buildGroup();
+      const s = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5), M.white);
+      s.position.y = -0.2; g.add(s);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), M.red);
+      h.position.y = 0.15; g.add(h);
+      return g;
+    },
+    pizza: () => {
+      const g = buildGroup();
+      const s = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.05, 3), M.yellow);
+      s.rotation.y = Math.PI / 6; g.add(s);
+      return g;
+    },
+    leaf: () => {
+      const g = buildGroup();
+      const l = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), M.green);
+      l.scale.set(1, 0.1, 2); l.rotation.z = 0.2; g.add(l);
+      return g;
+    },
+    shell: () => {
+      const g = buildGroup();
+      const s = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.4, 8), M.pink);
+      s.rotation.x = -Math.PI / 2; g.add(s);
+      return g;
+    },
+    crystal: () => {
+      const g = buildGroup();
+      const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.25), M.gem);
+      g.add(c);
+      return g;
+    },
+    balloon: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), M.red);
+      b.scale.y = 1.2; g.add(b);
+      const s = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.4), M.white);
+      s.position.y = -0.4; g.add(s);
+      return g;
+    },
+    rocket: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.4), M.white); g.add(b);
+      const t = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 8), M.red); t.position.y = 0.3; g.add(t);
+      return g;
+    },
+    gift: () => builders.present(),
+    key: () => {
+      const g = buildGroup();
+      const r = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.03, 8, 16), M.gold);
+      r.position.y = 0.2; g.add(r);
+      const s = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3), M.gold);
+      s.position.y = -0.05; g.add(s);
+      return g;
+    },
+    chest: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.3), M.brown); g.add(b);
+      return g;
+    },
+    egg: () => {
+      const g = buildGroup();
+      const e = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), M.white);
+      e.scale.y = 1.4; g.add(e);
+      return g;
+    },
+    fish: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), M.blue);
+      b.scale.set(1.5, 0.8, 0.5); g.add(b);
+      const t = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 3), M.blue);
+      t.position.x = -0.25; t.rotation.z = Math.PI / 2; g.add(t);
+      return g;
+    },
+    cherry: () => {
+      const g = buildGroup();
+      [[-0.12, 0], [0.12, -0.05]].forEach(([x, y]) => {
+        const c = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), M.red);
+        c.position.set(x, y, 0); g.add(c);
+        const s = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.3), M.brown);
+        s.position.set(x, y + 0.2, 0); s.rotation.z = x > 0 ? -0.4 : 0.4; g.add(s);
+      });
+      return g;
+    },
+    heart: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), M.red);
+      const l = b.clone(); l.position.x = -0.12; g.add(l);
+      const r = b.clone(); r.position.x = 0.12; g.add(r);
+      const c = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.4, 8), M.red);
+      c.rotation.x = Math.PI; c.position.y = -0.15; g.add(c);
+      return g;
+    },
+    kite: () => {
+      const g = buildGroup();
+      const k = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.02, 4), M.blue);
+      k.rotation.y = Math.PI / 4; g.add(k);
+      const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.5), M.white);
+      tail.position.y = -0.4; g.add(tail);
+      return g;
+    },
+    car: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.3), M.red); g.add(b);
+      const t = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.15, 0.25), M.blue); t.position.y = 0.15; g.add(t);
+      [[-0.15, -0.1, 0.15], [0.15, -0.1, 0.15], [-0.15, -0.1, -0.15], [0.15, -0.1, -0.15]].forEach(([x, y, z]) => {
+        const w = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.05, 8), M.black);
+        w.rotation.x = Math.PI / 2; w.position.set(x, y, z); g.add(w);
+      });
+      return g;
+    },
+    robot: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.2), M.silver); g.add(b);
+      const h = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.15), M.silver); h.position.y = 0.3; g.add(h);
+      const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), M.red); e1.position.set(0.05, 0.35, 0.08); g.add(e1);
+      const e2 = e1.clone(); e2.position.x = -0.05; g.add(e2);
+      return g;
+    },
+    dice: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.35), M.white); g.add(b);
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), M.black);
+      dot.position.z = 0.18; g.add(dot);
+      return g;
+    },
+    trophy: () => {
+      const g = buildGroup();
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.1, 0.3, 12), M.gold); cup.position.y = 0.15; g.add(cup);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05), M.brown); g.add(base);
+      return g;
+    },
+    potion: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), M.purple); b.scale.y = 1.2; g.add(b);
+      const n = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.2), M.white); n.position.y = 0.25; g.add(n);
+      return g;
+    },
+    ring: () => {
+      const g = buildGroup();
+      const r = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.04, 8, 16), M.gold); r.rotation.x = Math.PI / 2; g.add(r);
+      const d = new THREE.Mesh(new THREE.OctahedronGeometry(0.08), M.gem); d.position.y = 0.18; g.add(d);
+      return g;
+    },
+    diamond: () => {
+      const g = buildGroup();
+      const d = new THREE.Mesh(new THREE.OctahedronGeometry(0.25), M.gem); g.add(d);
+      return g;
+    },
+    medal: () => {
+      const g = buildGroup();
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 16), M.gold); m.rotation.x = Math.PI / 2; g.add(m);
+      const r = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.02), M.blue); r.position.y = 0.2; g.add(r);
+      return g;
+    },
+    butterfly: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.3), M.black); g.add(b);
+      [[-0.15, 0.1], [0.15, 0.1]].forEach(([x, y]) => {
+        const w = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), M.pink);
+        w.scale.set(1, 0.05, 1.5); w.position.set(x, y, 0); w.rotation.z = x > 0 ? 0.5 : -0.5; g.add(w);
+      });
+      return g;
+    },
+    bee: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), M.yellow); b.scale.z = 1.6; g.add(b);
+      const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.05, 12), M.black); stripe.rotation.x = Math.PI / 2; g.add(stripe);
+      const w1 = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), M.white); w1.scale.set(1, 0.02, 0.6); w1.position.set(0.15, 0.15, 0); g.add(w1);
+      const w2 = w1.clone(); w2.position.x = -0.15; g.add(w2);
+      return g;
+    },
+    snail: () => {
+      const g = buildGroup();
+      const s = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.08, 8, 16), M.brown); g.add(s);
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5), M.white); b.position.y = -0.15; b.rotation.z = Math.PI / 2; g.add(b);
+      return g;
+    },
+    frog: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), M.green); b.scale.y = 0.7; g.add(b);
+      const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), M.white); e1.position.set(0.12, 0.15, 0.1); g.add(e1);
+      const e2 = e1.clone(); e2.position.x = -0.12; g.add(e2);
+      return g;
+    },
+    pawprint: () => {
+      const g = buildGroup();
+      const pad = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), M.brown); pad.scale.y = 0.2; g.add(pad);
+      [[0.15, 0.15], [-0.15, 0.15], [0, 0.25]].forEach(([x, z]) => {
+        const toe = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), M.brown); toe.position.set(x, 0, z); toe.scale.y = 0.2; g.add(toe);
+      });
+      return g;
+    },
+    acorn: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), M.brown);
+      b.scale.y = 1.2; g.add(b);
+      const c = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.wood);
+      c.position.y = 0.05; g.add(c);
+      return g;
+    },
+    pinecone: () => {
+      const g = buildGroup();
+      for (let i = 0; i < 3; i++) {
+        const c = new THREE.Mesh(new THREE.CylinderGeometry(0.05 + i * 0.05, 0.15 + i * 0.02, 0.2, 8), M.brown);
+        c.position.y = -i * 0.15; g.add(c);
+      }
+      return g;
+    },
+    top: () => {
+      const g = buildGroup();
+      const c = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.4, 16), M.red);
+      c.rotation.x = Math.PI; g.add(c);
+      return g;
+    },
+    lantern: () => {
+      const g = buildGroup();
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.4, 8), M.red); g.add(b);
+      const t = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 8), M.gold); t.position.y = 0.2; g.add(t);
+      const v = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 8), M.gold); v.position.y = -0.2; g.add(v);
+      return g;
     }
   };
 
@@ -178,40 +416,64 @@
   // A catalog of 50 items leveraging variants of the builders
   const catalog = [
     // FOOD
-    { id: 'biscuit', name: 'Chocolate Biscuit', emoji: '🍪', cat: 'Food', msg: 'Yum!', color: 0xeebb77, build: builders.biscuit },
-    { id: 'apple', name: 'Red Apple', emoji: '🍎', cat: 'Food', msg: 'Crunchy!', color: 0xff3333, build: builders.apple },
+    { id: 'biscuit', name: 'Biscuit', emoji: '🍪', cat: 'Food', msg: 'Yum!', color: 0xeebb77, build: builders.biscuit },
+    { id: 'apple', name: 'Apple', emoji: '🍎', cat: 'Food', msg: 'Crunchy!', color: 0xff3333, build: builders.apple },
     { id: 'banana', name: 'Banana', emoji: '🍌', cat: 'Food', msg: 'Monkey time!', color: 0xffcc00, build: builders.banana },
     { id: 'orange', name: 'Orange', emoji: '🍊', cat: 'Food', msg: 'Zesty!', color: 0xff8800, build: builders.orange },
     { id: 'strawberry', name: 'Strawberry', emoji: '🍓', cat: 'Food', msg: 'Sweet!', color: 0xff3333, build: builders.strawberry },
     { id: 'watermelon', name: 'Watermelon', emoji: '🍉', cat: 'Food', msg: 'Refreshing!', color: 0x33cc33, build: builders.watermelon },
-    { id: 'carrot', name: 'Carrot', emoji: '🥕', cat: 'Food', msg: 'What\'s up doc?', color: 0xff8800, build: builders.carrot },
+    { id: 'cherry', name: 'Cherry', emoji: '🍒', cat: 'Food', msg: 'Double fun!', color: 0xff3333, build: builders.cherry },
+    { id: 'carrot', name: 'Carrot', emoji: '🥕', cat: 'Food', msg: 'Healthy!', color: 0xff8800, build: builders.carrot },
+    { id: 'cupcake', name: 'Cupcake', emoji: '🧁', cat: 'Food', msg: 'Fancy!', color: 0xff66bb, build: builders.cupcake },
+    { id: 'donut', name: 'Donut', emoji: '🍩', cat: 'Food', msg: 'Sprinkles!', color: 0xff8800, build: builders.donut },
+    { id: 'lollipop', name: 'Lollipop', emoji: '🍭', cat: 'Food', msg: 'Sweet!', color: 0xff3333, build: builders.lollipop },
+    { id: 'pizza', name: 'Pizza', emoji: '🍕', cat: 'Food', msg: 'Cowabunga!', color: 0xffcc00, build: builders.pizza },
 
     // NATURE
     { id: 'flower', name: 'Flower', emoji: '🌸', cat: 'Nature', msg: 'So pretty!', color: 0xff66bb, build: builders.flower },
-    { id: 'flower_pink', name: 'Pink Flower', emoji: '🌸', cat: 'Nature', msg: 'So pretty!', color: 0xff66bb, build: () => builders.flower(M.pink) },
-    { id: 'flower_red', name: 'Red Flower', emoji: '🌺', cat: 'Nature', msg: 'Lovely!', color: 0xff3333, build: () => builders.flower(M.red) },
-    { id: 'flower_sun', name: 'Sunflower', emoji: '🌻', cat: 'Nature', msg: 'Sunny!', color: 0xffcc00, build: () => builders.flower(M.yellow) },
+    { id: 'sunflower', name: 'Sunflower', emoji: '🌻', cat: 'Nature', msg: 'Sunny!', color: 0xffcc00, build: () => builders.flower(M.yellow) },
     { id: 'mushroom', name: 'Mushroom', emoji: '🍄', cat: 'Nature', msg: 'Fungi!', color: 0xff3333, build: builders.mushroom },
-    { id: 'star', name: 'Star', emoji: '⭐', cat: 'Treasures', msg: 'Shiny!', color: 0xffcc00, build: builders.star },
+    { id: 'leaf', name: 'Leaf', emoji: '🍀', cat: 'Nature', msg: 'Green!', color: 0x33cc33, build: builders.leaf },
+    { id: 'acorn', name: 'Acorn', emoji: '🌰', cat: 'Nature', msg: 'Nutty!', color: 0x8b4513, build: builders.acorn },
+    { id: 'shell', name: 'Shell', emoji: '🐚', cat: 'Nature', msg: 'Ocean!', color: 0xff66bb, build: builders.shell },
+    { id: 'crystal', name: 'Crystal', emoji: '💎', cat: 'Nature', msg: 'Magic!', color: 0x00ffff, build: builders.crystal },
+    { id: 'star', name: 'Star', emoji: '⭐', cat: 'Nature', msg: 'Shiny!', color: 0xffcc00, build: builders.star },
+    { id: 'heart', name: 'Heart', emoji: '❤️', cat: 'Nature', msg: 'Love!', color: 0xff3333, build: builders.heart },
+    { id: 'pinecone', name: 'Pinecone', emoji: '🌲', cat: 'Nature', msg: 'Forest!', color: 0x8b4513, build: builders.pinecone },
 
     // TOYS
     { id: 'ball', name: 'Ball', emoji: '⚽', cat: 'Toys', msg: 'Bounce!', color: 0xff3333, build: builders.ball },
-    { id: 'ball_red', name: 'Red Ball', emoji: '🔴', cat: 'Toys', msg: 'Bounce!', color: 0xff3333, build: () => builders.ball(M.red) },
-    { id: 'ball_blue', name: 'Blue Ball', emoji: '🔵', cat: 'Toys', msg: 'Catch!', color: 0x3366ff, build: () => builders.ball(M.blue) },
-    { id: 'ball_green', name: 'Green Ball', emoji: '🟢', cat: 'Toys', msg: 'Throw it!', color: 0x33cc33, build: () => builders.ball(M.green) },
-    { id: 'ball_yellow', name: 'Yellow Ball', emoji: '🟡', cat: 'Toys', msg: 'Rolland roll!', color: 0xffcc00, build: () => builders.ball(M.yellow) },
+    { id: 'balloon', name: 'Balloon', emoji: '🎈', cat: 'Toys', msg: 'Up up!', color: 0xff66bb, build: builders.balloon },
+    { id: 'kite', name: 'Kite', emoji: '🪁', cat: 'Toys', msg: 'Fly!', color: 0x3366ff, build: builders.kite },
+    { id: 'gift', name: 'Gift', emoji: '🎁', cat: 'Toys', msg: 'Surprise!', color: 0x3366ff, build: builders.present },
+    { id: 'rocket', name: 'Rocket', emoji: '🚀', cat: 'Toys', msg: 'Blast off!', color: 0xff3333, build: builders.rocket },
+    { id: 'car', name: 'Car', emoji: '🚗', cat: 'Toys', msg: 'Vroom!', color: 0x33cc33, build: builders.car },
+    { id: 'robot', name: 'Robot', emoji: '🤖', cat: 'Toys', msg: 'Beep boop!', color: 0xcccccc, build: builders.robot },
+    { id: 'top', name: 'Top', emoji: '🪀', cat: 'Toys', msg: 'Spin!', color: 0x33cc33, build: builders.top },
+    { id: 'dice', name: 'Dice', emoji: '🎲', cat: 'Toys', msg: 'Roll!', color: 0xffffff, build: builders.dice },
+    { id: 'crown', name: 'Crown', emoji: '👑', cat: 'Toys', msg: 'Royal!', color: 0xffbb00, build: builders.crown },
 
     // TREASURES
-    { id: 'coin', name: 'Gold Coin', emoji: '🪙', cat: 'Treasures', msg: 'Rich!', color: 0xffbb00, build: builders.coin },
-    { id: 'gem', name: 'Magic Gem', emoji: '💎', cat: 'Treasures', msg: 'Shiny!', color: 0x00ffff, build: builders.gem },
-    { id: 'star_gold', name: 'Gold Star', emoji: '⭐', cat: 'Treasures', msg: 'Superstar!', color: 0xffcc00, build: builders.star },
-    { id: 'star_glow', name: 'Glowing Star', emoji: '🌟', cat: 'Treasures', msg: 'It glows!', color: 0xffffff, build: builders.star },
-    { id: 'present', name: 'Present', emoji: '🎁', cat: 'Treasures', msg: 'Surprise!', color: 0x3366ff, build: builders.present },
-    { id: 'gift', name: 'Gift', emoji: '🎁', cat: 'Treasures', msg: 'Surprise!', color: 0x3366ff, build: builders.present },
-    { id: 'crown', name: 'Crown', emoji: '👑', cat: 'Treasures', msg: 'Royal!', color: 0xffbb00, build: builders.crown },
+    { id: 'coin', name: 'Coin', emoji: '🪙', cat: 'Treasures', msg: 'Rich!', color: 0xffbb00, build: builders.coin },
+    { id: 'gem', name: 'Gem', emoji: '💎', cat: 'Treasures', msg: 'Shiny!', color: 0x00ffff, build: builders.gem },
+    { id: 'trophy', name: 'Trophy', emoji: '🏆', cat: 'Treasures', msg: 'Winner!', color: 0xffbb00, build: builders.trophy },
+    { id: 'key', name: 'Key', emoji: '🔑', cat: 'Treasures', msg: 'Unlock!', color: 0xffbb00, build: builders.key },
+    { id: 'lantern', name: 'Lantern', emoji: '🏮', cat: 'Treasures', msg: 'Glow!', color: 0xff3333, build: builders.lantern },
+    { id: 'potion', name: 'Potion', emoji: '🧪', cat: 'Treasures', msg: 'Magic brew!', color: 0x9933ff, build: builders.potion },
+    { id: 'chest', name: 'Chest', emoji: '📦', cat: 'Treasures', msg: 'Loot!', color: 0x8b4513, build: builders.chest },
+    { id: 'ring', name: 'Ring', emoji: '💍', cat: 'Treasures', msg: 'Precious!', color: 0xffbb00, build: builders.ring },
+    { id: 'diamond', name: 'Diamond', emoji: '💠', cat: 'Treasures', msg: 'Fancy!', color: 0x00ffff, build: builders.diamond },
+    { id: 'medal', name: 'Medal', emoji: '🥇', cat: 'Treasures', msg: 'Champion!', color: 0xffbb00, build: builders.medal },
 
     // PETS / ANIMAL
-    { id: 'bone', name: 'Dog Bone', emoji: '🦴', cat: 'Animals', msg: 'Woof!', color: 0xffffff, build: builders.bone },
+    { id: 'egg', name: 'Egg', emoji: '🥚', cat: 'Animals', msg: 'Crack!', color: 0xffffff, build: builders.egg },
+    { id: 'bone', name: 'Bone', emoji: '🦴', cat: 'Animals', msg: 'Woof!', color: 0xffffff, build: builders.bone },
+    { id: 'fish', name: 'Fish', emoji: '🐟', cat: 'Animals', msg: 'Glub glub!', color: 0x3366ff, build: builders.fish },
+    { id: 'butterfly', name: 'Butterfly', emoji: '🦋', cat: 'Animals', msg: 'Flutter!', color: 0xff66bb, build: builders.butterfly },
+    { id: 'bee', name: 'Bee', emoji: '🐝', cat: 'Animals', msg: 'Bzzzz!', color: 0xffcc00, build: builders.bee },
+    { id: 'snail', name: 'Snail', emoji: '🐌', cat: 'Animals', msg: 'Slow!', color: 0x8b4513, build: builders.snail },
+    { id: 'frog', name: 'Frog', emoji: '🐸', cat: 'Animals', msg: 'Ribbit!', color: 0x33cc33, build: builders.frog },
+    { id: 'pawprint', name: 'Paw Print', emoji: '🐾', cat: 'Animals', msg: 'Pawsome!', color: 0x8b4513, build: builders.pawprint },
   ];
 
   // Map for easy access
