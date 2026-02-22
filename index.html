@@ -190,18 +190,20 @@
       background: linear-gradient(160deg, #ff8c42 0%, #ee5500 100%);
     }
 
-    .card:hover {
-      transform: translate(-4px, -4px) rotate(-1deg);
-      box-shadow: 10px 10px 0 #2a4a6b;
-    }
+    @media (hover: hover) {
+      .card:hover {
+        transform: translate(-4px, -4px) rotate(-1deg);
+        box-shadow: 10px 10px 0 #2a4a6b;
+      }
 
-    .card:hover::before {
-      opacity: 0.08;
+      .card:hover::before {
+        opacity: 0.08;
+      }
     }
 
     .card:active {
-      transform: translate(2px, 2px);
-      box-shadow: 3px 3px 0 #2a4a6b;
+      transform: translate(2px, 2px) !important;
+      box-shadow: 3px 3px 0 #2a4a6b !important;
     }
 
     .card-avatar {
@@ -444,13 +446,13 @@
   <div class="bird" style="top:12%;animation-duration:24s;animation-delay:-14s;font-size:16px">🐦</div>
 
   <!-- Clouds (CSS drawn) -->
-  <div
+  <div class="cloud-dec"
     style="position:fixed;top:8%;left:5%;width:120px;height:40px;background:#fff;border-radius:40px;opacity:.8;z-index:1;animation:drift1 20s linear infinite">
   </div>
-  <div
+  <div class="cloud-dec"
     style="position:fixed;top:15%;left:35%;width:90px;height:30px;background:#fff;border-radius:30px;opacity:.7;z-index:1;animation:drift2 25s linear infinite">
   </div>
-  <div
+  <div class="cloud-dec"
     style="position:fixed;top:6%;right:15%;width:110px;height:36px;background:#fff;border-radius:36px;opacity:.75;z-index:1;animation:drift3 30s linear infinite">
   </div>
   <style>
@@ -483,6 +485,12 @@
         transform: translateX(25px)
       }
     }
+
+    @media (max-width: 768px) {
+      .cloud-dec {
+        display: none !important;
+      }
+    }
   </style>
 
   <!-- Grass -->
@@ -498,14 +506,14 @@
   <div class="pick-label">👇 Who do you want to play as?</div>
 
   <div class="cards">
-    <a class="card card-bluey" href="./bluey.html">
+    <a class="card card-bluey" href="./bluey.html" ontouchstart="">
       <img class="card-avatar" src="./bluey.png" alt="Bluey">
       <div class="card-name">Bluey</div>
       <div class="card-game">🍪 Biscuit Run</div>
       <div class="card-pill">Play! →</div>
     </a>
 
-    <a class="card card-bingo" href="./bingo.html">
+    <a class="card card-bingo" href="./bingo.html" ontouchstart="">
       <img class="card-avatar" src="./bingo.png" alt="Bingo" style="animation-delay:0.4s">
       <div class="card-name">Bingo</div>
       <div class="card-game">🌸 Flower Hunt</div>
