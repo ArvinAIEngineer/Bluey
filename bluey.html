@@ -580,7 +580,7 @@
         mesh.castShadow = true;
         g.add(mesh);
 
-        const gl = new THREE.PointLight(ITEM_DEF.glow || 0xffffff, 2.0, 3.0);
+        const gl = new THREE.PointLight(0xffffff, 3.0, 5.0);
         gl.position.y = 0.5;
         g.add(gl);
 
