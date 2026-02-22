@@ -5,24 +5,48 @@
 (function () {
   const M = {
     // Basic Materials
-    red: new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.5, roughness: 0.2 }),
-    blue: new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.5, roughness: 0.2 }), // Cyan
-    white: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.1 }),
-    pink: new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5, roughness: 0.2 }),
-    orange: new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff6600, emissiveIntensity: 0.5, roughness: 0.2 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffcc00, emissiveIntensity: 0.3, metalness: 0.8 }),
-    purple: new THREE.MeshStandardMaterial({ color: 0x9900ff, emissive: 0x9900ff, emissiveIntensity: 0.5, roughness: 0.2 }),
+    // VIBRANT NEON PALETTE (High Contrast)
+    red: new THREE.MeshStandardMaterial({ color: 0xff0033, emissive: 0xff0000, emissiveIntensity: 0.3, roughness: 0.2 }),
+    blue: new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.3, roughness: 0.2 }),
+    purple: new THREE.MeshStandardMaterial({ color: 0xcc00ff, emissive: 0x6600ff, emissiveIntensity: 0.3, roughness: 0.2 }),
+    pink: new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.3, roughness: 0.2 }),
+    orange: new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff6600, emissiveIntensity: 0.3, roughness: 0.2 }),
+    yellow: new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 0.3, roughness: 0.1 }),
+    white: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.2, roughness: 0.1 }),
     black: new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 1.0 }),
-    contrast: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.0, transparent: true, opacity: 0.9 }), // White base disk
+    green: new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00aa00, emissiveIntensity: 0.2, roughness: 0.1 }), // Neon Green
+
+    // SPECIFIC MATERIALS (Restored and updated)
+    gold: new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffaa00, emissiveIntensity: 0.2, metalness: 0.8 }),
+    brown: new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.9 }),
+    biscuit: new THREE.MeshStandardMaterial({ color: 0xffd19a, roughness: 0.9 }),
+    choc: new THREE.MeshStandardMaterial({ color: 0x221100, roughness: 1.0 }),
+    wood: new THREE.MeshStandardMaterial({ color: 0x5d2906, roughness: 1.0 }),
+    leaf: new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 0.2 }), // Original leaf material
+    gem: new THREE.MeshStandardMaterial({ color: 0x00ffff, transparent: true, opacity: 0.9, emissive: 0x00ffff, emissiveIntensity: 0.5, metalness: 0.8 }),
+    silver: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x555555, emissiveIntensity: 0.2, metalness: 0.9 }),
+    stem: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }), // New stem material from edit
+    teal: new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.1 }), // New teal material from edit
+    darkgreen: new THREE.MeshStandardMaterial({ color: 0x004400, roughness: 0.9 }), // New darkgreen material from edit
+    lime: new THREE.MeshStandardMaterial({ color: 0xccff00, roughness: 0.1 }), // New lime material from edit
+
+    // CONTRAST BASE (Updated as per instruction)
+    baseDisk: new THREE.MeshStandardMaterial({ color: 0x000033, transparent: true, opacity: 0.8 }), // Deep Blue Disk
+    baseRim: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5 }), // White Rim
   };
 
-  // Helper to build compound items with a contrast base
+  // Helper to build compound items with a contrast base (Disk + Rim)
   function buildGroup() {
     const g = new THREE.Group();
-    // Add a high-contrast white disk at the ground level (y ≈ 0 relative to group)
-    const base = new THREE.Mesh(new THREE.CircleGeometry(0.35, 12), M.contrast);
+    // 1. White Rim (Slightly larger)
+    const rim = new THREE.Mesh(new THREE.CircleGeometry(0.38, 16), M.baseRim);
+    rim.rotation.x = -Math.PI / 2;
+    rim.position.y = -0.405;
+    g.add(rim);
+    // 2. Deep Blue Disk (Slightly smaller)
+    const base = new THREE.Mesh(new THREE.CircleGeometry(0.36, 16), M.baseDisk);
     base.rotation.x = -Math.PI / 2;
-    base.position.y = -0.4; // Slightly below the item
+    base.position.y = -0.4;
     g.add(base);
     return g;
   }
