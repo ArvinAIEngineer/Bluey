@@ -1,676 +1,997 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo's Flower Hunt!</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800&display=swap');
-  :root { --orange:#ff7b2e; --pink:#ff4da6; --yellow:#FFD93D; --white:#FFFEF5; }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { overflow:hidden; font-family:'Nunito',sans-serif; background:#ffb347; touch-action:none; user-select:none; }
-  #canvas { position:fixed; top:0; left:0; display:block; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingo's Flower Hunt!</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800&display=swap');
 
-  #ui { position:fixed; inset:0; pointer-events:none; z-index:10; }
-  #hud { position:absolute; top:16px; left:50%; transform:translateX(-50%); display:flex; gap:12px; }
-  .pill { background:var(--white); border:3px solid #333; border-radius:999px; padding:5px 14px; display:flex; align-items:center; gap:6px; box-shadow:3px 3px 0 #333; }
-  .pill-icon { font-size:clamp(14px,3vw,18px); }
-  .pill-val { font-family:'Fredoka One',cursive; font-size:clamp(16px,3.5vw,22px); color:#333; min-width:24px; text-align:center; }
-  #timer-pill .pill-val { color:#cc3300; }
-  #timer-pill.urgent { animation:tshake .25s infinite; }
-  @keyframes tshake { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
-
-  #popup { position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); font-family:'Fredoka One',cursive; font-size:clamp(22px,5vw,34px); color:var(--pink); -webkit-text-stroke:2px #333; opacity:0; pointer-events:none; white-space:nowrap; }
-  .pop-go { animation:popUp .75s ease-out forwards; }
-  @keyframes popUp { 0%{opacity:1;transform:translate(-50%,-50%) scale(.8)} 50%{opacity:1;transform:translate(-50%,-100%) scale(1.25)} 100%{opacity:0;transform:translate(-50%,-160%) scale(.9)} }
-
-  #ctrl { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:5px; opacity:.5; }
-  .crow { display:flex; gap:5px; }
-  .key { background:var(--white); border:2px solid #555; border-radius:6px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-family:'Fredoka One',cursive; font-size:12px; color:#333; box-shadow:2px 2px 0 #555; }
-  @media (hover:none) and (pointer:coarse) { #ctrl { display:none; } }
-  #joystick-zone { position:fixed; bottom:20px; left:20px; z-index:20; pointer-events:all; display:none; }
-  #joystick-outer { width:110px; height:110px; border-radius:50%; background:rgba(255,140,60,0.25); border:3px solid rgba(255,255,255,0.6); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
-  #joystick-inner { width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.8); border:2px solid rgba(0,0,0,0.15); box-shadow:0 2px 8px rgba(0,0,0,0.25); pointer-events:none; transition:transform 0.05s; }
-  @media (hover:none) and (pointer:coarse) { #joystick-zone { display:block; } }
-  #back-btn {
-    position: fixed; top: 14px; left: 14px; z-index: 20;
-    font-family: 'Fredoka One', cursive; font-size: clamp(12px,3vw,14px);
-    background: #fff; color: #333; border: 3px solid #333;
-    border-radius: 999px; padding: 7px 16px; cursor: pointer;
-    box-shadow: 3px 3px 0 #333; text-decoration: none;
-    display: flex; align-items: center; gap: 5px;
-    transition: transform 0.1s, box-shadow 0.1s;
-  }
-  #back-btn:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 #333; }
-  .crow { display:flex; gap:5px; }
-  .key { background:var(--white); border:2px solid #555; border-radius:6px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-family:'Fredoka One',cursive; font-size:12px; color:#333; box-shadow:2px 2px 0 #555; }
-
-  #screen { position:absolute; inset:0; background:rgba(255,140,60,.88); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; pointer-events:all; transition:opacity .3s; }
-  #screen.hidden { opacity:0; pointer-events:none; }
-  .card { background:var(--white); border:4px solid #333; border-radius:26px; padding:clamp(18px,4vw,28px) clamp(20px,5vw,36px); text-align:center; box-shadow:6px 6px 0 #333; max-width:400px; width:90%; }
-  .card-emoji {
-    width: 120px; height: 120px;
-    display: block; margin: 0 auto 12px;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2));
-  }
-  .card-title { font-family:'Fredoka One',cursive; font-size:clamp(24px,6vw,34px); color:var(--orange); -webkit-text-stroke:1.5px #333; line-height:1.1; margin-bottom:6px; }
-  .card-sub { font-size:clamp(12px,2.5vw,14px); color:#666; margin-bottom:16px; line-height:1.5; }
-  .card-stats { font-family:'Fredoka One',cursive; font-size:clamp(14px,3vw,17px); color:#444; margin-bottom:16px; line-height:1.9; }
-  .play-btn { font-family:'Fredoka One',cursive; font-size:clamp(16px,3.5vw,19px); color:#333; background:var(--pink); border:3px solid #333; border-radius:999px; padding:12px 36px; cursor:pointer; box-shadow:4px 4px 0 #333; transition:transform .1s,box-shadow .1s; pointer-events:all; }
-  .play-btn:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 #333; }
-  .play-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #333; }
-
-  #loading { position:fixed; inset:0; background:#ffb347; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:30; font-family:'Fredoka One',cursive; color:#333; font-size:clamp(15px,3.5vw,18px); }
-  #loading.hidden { display:none; }
-  .lpup { width:clamp(90px,20vw,130px); height:clamp(90px,20vw,130px); object-fit:contain; animation:pup .55s infinite alternate; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.25)); }
-  @keyframes pup { from{transform:translateY(0)} to{transform:translateY(-12px)} }
-</style>
-</head>
-<body>
-<canvas id="canvas"></canvas>
-<a id="back-btn" href="./index.html">🏡 Home</a>
-
-<div id="joystick-zone">
-  <div id="joystick-outer">
-    <div id="joystick-inner"></div>
-  </div>
-</div>
-
-<div id="loading">
-  <img class="lpup" src="./bingo.png" alt="Bingo">
-  <div>Setting up the backyard...</div>
-</div>
-
-<div id="ui">
-  <div id="hud">
-    <div class="pill"><span class="pill-icon">🌸</span><span class="pill-val" id="score-val">0</span></div>
-    <div class="pill"><span class="pill-icon">🌺</span><span class="pill-val" id="collect-val">0/12</span></div>
-    <div class="pill" id="timer-pill"><span class="pill-icon">⏰</span><span class="pill-val" id="timer-val">60</span></div>
-  </div>
-  <div id="popup">Pretty!</div>
-  <div id="ctrl">
-    <div class="crow"><div class="key">W</div></div>
-    <div class="crow"><div class="key">A</div><div class="key">S</div><div class="key">D</div></div>
-  </div>
-</div>
-
-<div id="screen">
-  <div class="card">
-    <img class="card-emoji" src="./bingo.png" alt="Bingo">
-    <div class="card-title" id="s-title">Bingo's<br>Flower Hunt!</div>
-    <div class="card-sub" id="s-sub">Help Bingo collect all the flowers before Mum picks them! 🌸</div>
-    <div class="card-stats" id="s-stats" style="display:none"></div>
-    <button class="play-btn" id="play-btn" onclick="startGame()">Let's Go! 🌺</button>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script>
-// ─── RENDERER ────────────────────────────────────────────────────────────────
-const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.setSize(window.innerWidth, window.innerHeight);
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x5bbfea);  // warm blue sky
-scene.fog = new THREE.FogExp2(0x5bbfea, 0.018);
-
-const camera = new THREE.PerspectiveCamera(52, window.innerWidth/window.innerHeight, 0.1, 300);
-camera.position.set(0, 14, 18);
-camera.lookAt(0, 0, 0);
-
-window.addEventListener('resize', () => {
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  camera.aspect = window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-});
-
-// ─── LIGHTING ─────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xffe8cc, 0.4));
-const sun = new THREE.DirectionalLight(0xffeecc, 1.6);
-sun.position.set(12, 25, 10);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 1; sun.shadow.camera.far = 100;
-sun.shadow.camera.left = sun.shadow.camera.bottom = -30;
-sun.shadow.camera.right = sun.shadow.camera.top = 30;
-scene.add(sun);
-const fill = new THREE.DirectionalLight(0xffaacc, 0.3);
-fill.position.set(-8, 6, -5);
-scene.add(fill);
-
-// Spotlight that follows Bingo
-const playerSpot = new THREE.SpotLight(0xffffff, 2.5, 9, Math.PI/6, 0.4);
-playerSpot.position.set(0, 7, 2);
-scene.add(playerSpot);
-scene.add(playerSpot.target);
-
-// ─── MATERIALS ────────────────────────────────────────────────────────────────
-const M = {
-  grass:     new THREE.MeshStandardMaterial({ color: 0x268a18, roughness: 0.9 }),
-  grassDark: new THREE.MeshStandardMaterial({ color: 0x145c0a, roughness: 0.9 }),
-  fence:     new THREE.MeshStandardMaterial({ color: 0xa0622a, roughness: 0.8 }),
-  fenceRail: new THREE.MeshStandardMaterial({ color: 0x7a4a1a, roughness: 0.8 }),
-  house:     new THREE.MeshStandardMaterial({ color: 0xe8a820, roughness: 0.7 }),
-  roof:      new THREE.MeshStandardMaterial({ color: 0xcc2211, roughness: 0.7 }),
-  door:      new THREE.MeshStandardMaterial({ color: 0x5a3010, roughness: 0.7 }),
-  window:    new THREE.MeshStandardMaterial({ color: 0x44aaee, roughness: 0.2, metalness: 0.2 }),
-  trampolineLegs: new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.6 }),
-  trampolineMat:  new THREE.MeshStandardMaterial({ color: 0xee4411, roughness: 0.9 }), // red for Bingo!
-  clothesline: new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.6 }),
-  wood:      new THREE.MeshStandardMaterial({ color: 0x7a4820, roughness: 0.9 }),
-  treeTrunk: new THREE.MeshStandardMaterial({ color: 0x5a3a18, roughness: 1.0 }),
-  treeLeaf:  new THREE.MeshStandardMaterial({ color: 0x1a8a1a, roughness: 0.9 }),
-  treeLeaf2: new THREE.MeshStandardMaterial({ color: 0x0e6e0e, roughness: 0.9 }),
-  path:      new THREE.MeshStandardMaterial({ color: 0xd4d4d4, roughness: 0.95 }),
-  flowerStem:new THREE.MeshStandardMaterial({ color: 0x116611, roughness: 0.9 }),
-};
-
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
-const BOUND = 18;
-const obstacles = [];
-function addObs(x, z, r) { obstacles.push({ x, z, r }); }
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function box(w, h, d, mat, x, y, z, ry=0) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  m.position.set(x, y, z); m.rotation.y = ry;
-  m.castShadow = true; m.receiveShadow = true; scene.add(m); return m;
-}
-function cyl(rt, rb, h, seg, mat, x, y, z, rx=0) {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
-  m.position.set(x, y, z); m.rotation.x = rx;
-  m.castShadow = true; m.receiveShadow = true; scene.add(m); return m;
-}
-function sphere(r, mat, x, y, z) {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), mat);
-  m.position.set(x, y, z); m.castShadow = true; scene.add(m); return m;
-}
-
-// ─── GROUND ──────────────────────────────────────────────────────────────────
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(BOUND*2+8, BOUND*2+8), M.grass);
-ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
-for (let i = 0; i < 18; i++) {
-  const p = new THREE.Mesh(new THREE.CircleGeometry(1.5+Math.random()*2.5, 7), M.grassDark);
-  p.rotation.x = -Math.PI/2;
-  p.position.set((Math.random()-.5)*BOUND*2, 0.005, (Math.random()-.5)*BOUND*2);
-  scene.add(p);
-}
-
-// ─── FENCE ───────────────────────────────────────────────────────────────────
-function fenceSegment(x1,z1,x2,z2) {
-  const dx=x2-x1, dz=z2-z1, len=Math.hypot(dx,dz), ang=Math.atan2(dx,dz);
-  const posts = Math.ceil(len/2.2);
-  for (let i=0;i<=posts;i++) {
-    const t=i/posts;
-    const m=new THREE.Mesh(new THREE.BoxGeometry(0.2,1.5,0.2),M.fence);
-    m.position.set(x1+dx*t,0.75,z1+dz*t); m.castShadow=true; scene.add(m);
-  }
-  [0.45,0.95].forEach(h=>{
-    const rail=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,len+0.1),M.fenceRail);
-    rail.position.set((x1+x2)/2,h,(z1+z2)/2); rail.rotation.y=ang; scene.add(rail);
-  });
-}
-const F=BOUND+1;
-fenceSegment(-F,-F,F,-F); fenceSegment(F,-F,F,F);
-fenceSegment(F,F,-F,F);   fenceSegment(-F,F,-F,-F);
-
-// ─── HOUSE ───────────────────────────────────────────────────────────────────
-{
-  const hx=-12, hz=-13;
-  box(9,4,6,M.house,hx,2,hz);
-  const roof=new THREE.Mesh(new THREE.ConeGeometry(6.5,3,4),M.roof);
-  roof.position.set(hx,5.5,hz); roof.rotation.y=Math.PI/4; roof.castShadow=true; scene.add(roof);
-  box(1.0,2.0,0.15,M.door,hx,1.0,hz+3.05);
-  box(1.2,0.9,0.12,M.window,hx-2.2,2.2,hz+3.05);
-  box(1.2,0.9,0.12,M.window,hx+2.2,2.2,hz+3.05);
-  box(3,0.2,1,M.path,hx,0.1,hz+3.5);
-  addObs(hx,hz,5.5);
-}
-
-// ─── CLOTHESLINE ─────────────────────────────────────────────────────────────
-{
-  const clx=8, clz=-10;
-  cyl(0.08,0.08,4.5,8,M.clothesline,clx,2.25,clz);
-  const disc=new THREE.Mesh(new THREE.CylinderGeometry(2.8,2.8,0.1,20),M.clothesline);
-  disc.position.set(clx,4.5,clz); scene.add(disc);
-  for (let i=0;i<6;i++) {
-    const a=(i/6)*Math.PI*2;
-    const arm=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,2.8,6),M.clothesline);
-    arm.rotation.z=Math.PI/2; arm.position.set(clx+Math.cos(a)*1.4,4.5,clz+Math.sin(a)*1.4);
-    arm.rotation.y=a; scene.add(arm);
-  }
-  cyl(0.3,0.4,0.3,8,M.wood,clx,0.15,clz);
-  addObs(clx,clz,3.2);
-}
-
-// ─── TRAMPOLINE (red for Bingo!) ──────────────────────────────────────────────
-{
-  const tx=9, tz=8, tramR=2.8;
-  const frameTube=new THREE.Mesh(new THREE.TorusGeometry(tramR,0.18,8,40),M.trampolineLegs);
-  frameTube.position.set(tx,1.6,tz); frameTube.rotation.x=Math.PI/2;
-  frameTube.castShadow=true; scene.add(frameTube);
-  const mat=new THREE.Mesh(new THREE.CircleGeometry(tramR-0.2,32),M.trampolineMat);
-  mat.position.set(tx,1.62,tz); mat.rotation.x=-Math.PI/2; scene.add(mat);
-  for (let i=0;i<6;i++) {
-    const a=(i/6)*Math.PI*2;
-    cyl(0.08,0.1,1.6,6,M.trampolineLegs,tx+Math.cos(a)*tramR*0.9,0.8,tz+Math.sin(a)*tramR*0.9);
-    cyl(0.05,0.05,1.8,6,M.trampolineLegs,tx+Math.cos(a)*(tramR+0.1),2.5,tz+Math.sin(a)*(tramR+0.1));
-  }
-  addObs(tx,tz,tramR+0.5);
-}
-
-// ─── TREES ────────────────────────────────────────────────────────────────────
-function tree(x,z,sc=1) {
-  cyl(0.22*sc,0.3*sc,2.0*sc,7,M.treeTrunk,x,1.0*sc,z);
-  sphere(1.5*sc,M.treeLeaf,x,3.2*sc,z);
-  sphere(1.1*sc,M.treeLeaf2,x+0.4*sc,4.2*sc,z+0.2*sc);
-  sphere(0.9*sc,M.treeLeaf,x-0.3*sc,4.6*sc,z-0.3*sc);
-  addObs(x,z,1.0*sc);
-}
-[[-6,-14,0.85],[4,-16,0.95],[14,-12,0.9],[15,4,1.0],[14,14,0.85],[-3,15,0.9],[-13,12,0.95],[-16,2,0.85]].forEach(([x,z,s])=>tree(x,z,s));
-
-// ─── SANDPIT ─────────────────────────────────────────────────────────────────
-{
-  const sandMat=new THREE.MeshStandardMaterial({color:0xe8c97a,roughness:1.0});
-  const sand=new THREE.Mesh(new THREE.CircleGeometry(2.2,20),sandMat);
-  sand.rotation.x=-Math.PI/2; sand.position.set(-10,0.03,8); scene.add(sand);
-  for (let i=0;i<8;i++) {
-    const a=(i/8)*Math.PI*2;
-    const plank=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.25,0.25),M.wood);
-    plank.position.set(-10+Math.cos(a)*2.2,0.15,8+Math.sin(a)*2.2);
-    plank.rotation.y=a+Math.PI/2; scene.add(plank);
-  }
-  cyl(0.22,0.18,0.35,8,new THREE.MeshStandardMaterial({color:0xff9900}),-9.5,0.2,8.5);
-  addObs(-10,8,2.6);
-}
-
-// ─── KENNEL ──────────────────────────────────────────────────────────────────
-{
-  const kx=5, kz=-14;
-  box(2.2,1.8,2.0,M.wood,kx,0.9,kz);
-  const kRoof=new THREE.Mesh(new THREE.ConeGeometry(1.7,1.0,4),M.roof);
-  kRoof.position.set(kx,2.3,kz); kRoof.rotation.y=Math.PI/4; kRoof.castShadow=true; scene.add(kRoof);
-  addObs(kx,kz,1.5);
-}
-
-// ─── LARGE FLOWER GARDEN (Bingo's favourite!) ─────────────────────────────────
-// Big flower bed along the back
-const flowerColors = [0xff2288, 0xff6600, 0xffcc00, 0xff44aa, 0xff8833, 0xee1166, 0xffaa22];
-function bigFlower(x, z, col, h=0.8) {
-  cyl(0.05,0.05,h,5,M.flowerStem,x,h/2,z);
-  // Petals
-  const petalMat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 });
-  for (let i=0;i<6;i++) {
-    const a=(i/6)*Math.PI*2;
-    const petal=new THREE.Mesh(new THREE.SphereGeometry(0.2,8,6),petalMat);
-    petal.position.set(x+Math.cos(a)*0.25, h+0.05, z+Math.sin(a)*0.25);
-    petal.scale.y=0.5; scene.add(petal);
-  }
-  // Centre
-  const centre=new THREE.Mesh(new THREE.SphereGeometry(0.18,8,6),new THREE.MeshStandardMaterial({color:0xffee00,emissive:0xffcc00,emissiveIntensity:0.3}));
-  centre.position.set(x,h+0.08,z); scene.add(centre);
-}
-
-// Flower bed positions scattered around
-const flowerPositions = [
-  [-2,-16,0xff2288],[-4,-16,0xff6600],[0,-16,0xffcc00],[2,-16,0xff44aa],[4,-16,0xff8833],
-  [-1,-15,0xee1166],[1,-15,0xffaa22],[3,-15,0xff2288],[-3,-15,0xff6600],
-  [14,6,0xff44aa],[14,8,0xffcc00],[14,10,0xff2288],
-  [-15,-4,0xff6600],[-15,-2,0xff44aa],[-15,0,0xffcc00],
-  [6,16,0xff8833],[8,16,0xff2288],[10,16,0xffaa22],[4,16,0xee1166],
-];
-flowerPositions.forEach(([x,z,col])=>bigFlower(x,z,col,0.7+Math.random()*0.5));
-
-// ─── STEPPING STONES PATH ────────────────────────────────────────────────────
-{
-  const stoneMat=new THREE.MeshStandardMaterial({color:0xbbbbaa,roughness:0.95});
-  [[-9,0.02,3],[-9,0.02,1],[-9,0.02,-1],[-9,0.02,-3],[-10,0.02,-5],[-11,0.02,-7]].forEach(([x,y,z])=>{
-    const s=new THREE.Mesh(new THREE.CylinderGeometry(0.5+Math.random()*0.2,0.5+Math.random()*0.2,0.1,7),stoneMat);
-    s.position.set(x,y,z); s.rotation.y=Math.random(); s.receiveShadow=true; scene.add(s);
-  });
-}
-
-// ─── BUTTERFLIES (floating decorative) ──────────────────────────────────────
-const butterflies = [];
-const butterflyColors = [0xff4488, 0xff8800, 0xffcc00, 0xff44cc];
-for (let i=0;i<8;i++) {
-  const col=butterflyColors[i%butterflyColors.length];
-  const bm=new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.3,side:THREE.DoubleSide});
-  const g=new THREE.Group();
-  // Two wings
-  [-1,1].forEach(side=>{
-    const wing=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.2),bm);
-    wing.position.x=side*0.15; scene.add(wing); g.add(wing);
-  });
-  g.position.set((Math.random()-.5)*BOUND*1.5, 2+Math.random()*2, (Math.random()-.5)*BOUND*1.5);
-  scene.add(g);
-  butterflies.push({ group:g, phase:Math.random()*Math.PI*2, cx:g.position.x, cz:g.position.z });
-}
-
-// ─── CLOUDS ──────────────────────────────────────────────────────────────────
-const cloudMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1.0});
-function cloud(x,y,z,sc=1) {
-  [[0,0,0,1.0],[0.9,0.3,0,0.8],[-0.8,0.2,0,0.75],[0,0.5,0,0.7]].forEach(([dx,dy,dz,r])=>{
-    const m=new THREE.Mesh(new THREE.SphereGeometry(r*sc,8,6),cloudMat);
-    m.position.set(x+dx*sc,y+dy*sc,z+dz*sc); scene.add(m);
-  });
-}
-cloud(-8,18,-15,1.2); cloud(6,20,-18,1.0); cloud(12,17,-10,0.9);
-cloud(-14,19,5,1.1);  cloud(3,21,10,0.8);
-
-// ─── COLLECTIBLES: FLOWERS ────────────────────────────────────────────────────
-const TOTAL = 12;
-const flowerGroup = new THREE.Group();
-scene.add(flowerGroup);
-const flowers = [];
-
-const collectColors = [0xff1177, 0xff6600, 0xffcc00, 0xff44bb];
-function spawnFlowers() {
-  flowers.forEach(f=>flowerGroup.remove(f.mesh));
-  flowers.length=0;
-  for (let i=0;i<TOTAL;i++) {
-    let fx,fz,bad,tries=0;
-    do {
-      fx=(Math.random()-.5)*(BOUND*2-4);
-      fz=(Math.random()-.5)*(BOUND*2-4);
-      bad=Math.hypot(fx-player.x,fz-player.z)<3
-        ||obstacles.some(o=>Math.hypot(fx-o.x,fz-o.z)<o.r+1.5);
-      tries++;
-    } while(bad&&tries<100);
-
-    const col=collectColors[i%collectColors.length];
-    const g=new THREE.Group();
-    const stemM=new THREE.MeshStandardMaterial({color:0x116611,roughness:0.9});
-    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.6,7),stemM);
-    g.add(stem);
-    const petalM=new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.4,roughness:0.6});
-    for (let j=0;j<6;j++) {
-      const a=(j/6)*Math.PI*2;
-      const petal=new THREE.Mesh(new THREE.SphereGeometry(0.18,8,6),petalM);
-      petal.position.set(Math.cos(a)*0.22,0.32,Math.sin(a)*0.22);
-      petal.scale.y=0.45; g.add(petal);
-    }
-    const ctrM=new THREE.MeshStandardMaterial({color:0xffee00,emissive:0xffdd00,emissiveIntensity:0.5});
-    const ctr=new THREE.Mesh(new THREE.SphereGeometry(0.16,8,6),ctrM);
-    ctr.position.y=0.34; g.add(ctr);
-    // Glow
-    const gl=new THREE.PointLight(col,1.0,2.5);
-    gl.position.y=0.5; g.add(gl);
-
-    g.position.set(fx,0.3,fz);
-    flowerGroup.add(g);
-    flowers.push({mesh:g,x:fx,z:fz,collected:false,phase:Math.random()*Math.PI*2});
-  }
-}
-
-// ─── PARTICLES ───────────────────────────────────────────────────────────────
-const particles=[];
-const pCols=[0xff1177,0xff6600,0xffcc00,0xff44bb,0xffffff];
-function spawnParticles(x,z) {
-  for (let i=0;i<16;i++) {
-    const col=pCols[Math.floor(Math.random()*pCols.length)];
-    const m=new THREE.Mesh(new THREE.SphereGeometry(0.07+Math.random()*0.09,6,6),
-      new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.9,transparent:true}));
-    m.position.set(x,0.45,z);
-    const a=Math.random()*Math.PI*2, sp=3+Math.random()*5;
-    scene.add(m);
-    particles.push({mesh:m,vx:Math.cos(a)*sp,vy:4+Math.random()*5,vz:Math.sin(a)*sp,life:1.0});
-  }
-}
-
-// ─── RENDER START SCREEN AVATAR ──────────────────────────────────────────────
-function renderGLBSnapshot(url, imgId) {
-  const SIZE = 220;
-  const oc = document.createElement('canvas');
-  oc.width = SIZE; oc.height = SIZE;
-  const or = new THREE.WebGLRenderer({ canvas: oc, antialias: true, alpha: true });
-  or.setSize(SIZE, SIZE); or.setClearColor(0x000000, 0); or.outputEncoding = THREE.sRGBEncoding;
-  const os = new THREE.Scene();
-  const cam = new THREE.PerspectiveCamera(42, 1, 0.01, 100);
-  cam.position.set(0, 1.2, 4.5); cam.lookAt(0, 0.8, 0);
-  os.add(new THREE.AmbientLight(0xffffff, 1.2));
-  const kl = new THREE.DirectionalLight(0xffffff, 2.2); kl.position.set(2,4,3); os.add(kl);
-  const rl = new THREE.DirectionalLight(0xffddaa, 1.0); rl.position.set(-2,2,-2); os.add(rl);
-  new THREE.GLTFLoader().load(url, gltf => {
-    const model = gltf.scene;
-    const box = new THREE.Box3().setFromObject(model);
-    const sz = box.getSize(new THREE.Vector3());
-    model.scale.setScalar(2.0 / Math.max(sz.x, sz.y, sz.z));
-    const box2 = new THREE.Box3().setFromObject(model);
-    model.position.sub(box2.getCenter(new THREE.Vector3()));
-    model.rotation.y = -Math.PI * 0.12;
-    os.add(model);
-    let f = 0;
-    (function snap() {
-      f++; or.render(os, cam);
-      if (f < 8) requestAnimationFrame(snap);
-      else { const img = document.getElementById(imgId); if(img) img.src = oc.toDataURL('image/png'); or.dispose(); }
-    })();
-  });
-}
-renderGLBSnapshot('./bingo.glb', 'start-avatar');
-
-// ─── PLAYER ──────────────────────────────────────────────────────────────────
-const player={group:null,mixer:null,blastAction:null,x:0,z:2,speed:6,radius:0.5,facing:0,blasting:false};
-
-new THREE.GLTFLoader().load('./bingo.glb', gltf=>{
-  const model=gltf.scene;
-  const b=new THREE.Box3().setFromObject(model);
-  model.scale.setScalar(1.8/b.getSize(new THREE.Vector3()).y);
-  const b2=new THREE.Box3().setFromObject(model);
-  model.position.y=-b2.min.y;
-  model.traverse(c=>{ if(c.isMesh){c.castShadow=true;c.receiveShadow=true;} });
-
-  const group=new THREE.Group();
-  group.add(model);
-  group.position.set(0,0,2);
-  scene.add(group);
-  player.group=group;
-  player.x=0; player.z=2;
-
-  // Warm orange glow under Bingo
-  const glow=new THREE.PointLight(0xff7722,1.2,3.5);
-  glow.position.y=0.2; group.add(glow);
-
-  if (gltf.animations.length>0) {
-    const mixer=new THREE.AnimationMixer(model);
-    player.mixer=mixer;
-    const action=mixer.clipAction(gltf.animations[0]);
-    action.loop=THREE.LoopOnce; action.clampWhenFinished=true;
-    player.blastAction=action;
-  }
-
-  document.getElementById('loading').classList.add('hidden');
-
-},undefined,err=>{
-  console.error('Bingo load error:',err);
-  // Fallback orange box
-  const g=new THREE.Group();
-  const b=new THREE.Mesh(new THREE.BoxGeometry(0.6,1.0,0.4),new THREE.MeshStandardMaterial({color:0xff7722}));
-  b.position.y=0.5; g.add(b);
-  const h=new THREE.Mesh(new THREE.SphereGeometry(0.35,8,8),new THREE.MeshStandardMaterial({color:0xff5500}));
-  h.position.y=1.3; g.add(h);
-  scene.add(g); player.group=g;
-  document.getElementById('loading').classList.add('hidden');
-});
-
-// ─── INPUT ────────────────────────────────────────────────────────────────────
-const keys={};
-document.addEventListener('keydown',e=>{keys[e.code]=true;e.preventDefault();});
-document.addEventListener('keyup',e=>keys[e.code]=false);
-
-// ── Virtual Joystick ──────────────────────────────────────────────────────
-const joystickOuter = document.getElementById('joystick-outer');
-const joystickInner = document.getElementById('joystick-inner');
-const JMAX = 40;
-const joy = { active:false, id:null, startX:0, startY:0, dx:0, dz:0 };
-
-joystickOuter.addEventListener('touchstart', e => {
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  joy.active = true; joy.id = t.identifier;
-  joy.startX = t.clientX; joy.startY = t.clientY;
-  joy.dx = 0; joy.dz = 0;
-}, { passive:false });
-
-document.addEventListener('touchmove', e => {
-  if (!joy.active) return;
-  e.preventDefault();
-  for (const t of e.changedTouches) {
-    if (t.identifier !== joy.id) continue;
-    const ox = t.clientX - joy.startX;
-    const oy = t.clientY - joy.startY;
-    const dist = Math.hypot(ox, oy);
-    const clamped = Math.min(dist, JMAX);
-    const angle = Math.atan2(oy, ox);
-    joy.dx = Math.cos(angle) * (clamped / JMAX);
-    joy.dz = Math.sin(angle) * (clamped / JMAX);
-    joystickInner.style.transform = `translate(${Math.cos(angle)*clamped}px, ${Math.sin(angle)*clamped}px)`;
-  }
-}, { passive:false });
-
-document.addEventListener('touchend', e => {
-  for (const t of e.changedTouches) {
-    if (t.identifier === joy.id) {
-      joy.active = false; joy.dx = 0; joy.dz = 0;
-      joystickInner.style.transform = 'translate(0,0)';
-    }
-  }
-});
-
-
-// ─── GAME STATE ───────────────────────────────────────────────────────────────
-let score=0,collected=0,timeLeft=60,gameRunning=false,timerInterval=null,lastTime=0;
-
-const scoreEl=document.getElementById('score-val');
-const collectEl=document.getElementById('collect-val');
-const timerEl=document.getElementById('timer-val');
-const timerPill=document.getElementById('timer-pill');
-const popup=document.getElementById('popup');
-const screen=document.getElementById('screen');
-
-function updateHUD(){scoreEl.textContent=score;collectEl.textContent=`${collected}/${TOTAL}`;timerEl.textContent=timeLeft;}
-
-const msgs=['So pretty! 🌸','Ooh lovely!','Found one! 🌺','Beautiful!','Wackadoo!','Mum will love this!'];
-function showPopup(){
-  popup.textContent=msgs[Math.floor(Math.random()*msgs.length)];
-  popup.classList.remove('pop-go'); void popup.offsetWidth; popup.classList.add('pop-go');
-}
-
-function startGame(){
-  if(!player.group)return;
-  score=0;collected=0;timeLeft=60;gameRunning=true;
-  player.blasting=false;player.x=0;player.z=2;
-  player.group.position.set(0,0,2);
-  if(player.mixer)player.mixer.stopAllAction();
-  spawnFlowers();updateHUD();
-  screen.classList.add('hidden');
-  document.getElementById('s-stats').style.display='none';
-  timerPill.classList.remove('urgent');
-  if(timerInterval)clearInterval(timerInterval);
-  timerInterval=setInterval(()=>{
-    if(!gameRunning)return;
-    timeLeft--;updateHUD();
-    if(timeLeft<=10)timerPill.classList.add('urgent');
-    if(timeLeft<=0)endGame(false);
-  },1000);
-}
-
-function endGame(won){
-  gameRunning=false;clearInterval(timerInterval);timerPill.classList.remove('urgent');
-  if(!won&&player.blastAction){player.blasting=true;player.blastAction.reset().play();}
-  const sa = document.getElementById('start-avatar');
-  if (sa) sa.style.filter = won ? 'none' : 'grayscale(0.5)';
-  document.getElementById('s-title').textContent=won?"That's Fancy!":'Oh No! Time\'s Up!';
-  document.getElementById('s-sub').textContent=won?'Bingo found all the flowers! Mum will be so happy! 🌸':'Mum picked the rest! Try again!';
-  const stats=document.getElementById('s-stats');
-  stats.style.display='block';stats.innerHTML=`🌸 Flowers: ${collected}/${TOTAL}<br>⭐ Score: ${score}`;
-  document.getElementById('play-btn').textContent='Play Again! 🌺';
-  screen.classList.remove('hidden');
-}
-
-// ─── GAME LOOP ────────────────────────────────────────────────────────────────
-function animate(now){
-  requestAnimationFrame(animate);
-  const dt=Math.min((now-lastTime)/1000,0.05);
-  lastTime=now;
-
-  if(player.mixer&&player.blasting)player.mixer.update(dt);
-
-  // Animate butterflies
-  const t=now/1000;
-  butterflies.forEach((b,i)=>{
-    b.group.position.x=b.cx+Math.sin(t*0.8+b.phase)*3;
-    b.group.position.z=b.cz+Math.cos(t*0.6+b.phase)*3;
-    b.group.position.y=2.0+Math.sin(t*1.5+b.phase)*0.5;
-    b.group.rotation.y=Math.sin(t*0.8+b.phase);
-    // Wing flap
-    b.group.children.forEach((wing,wi)=>{
-      wing.rotation.y=(wi===0?1:-1)*Math.sin(t*8+b.phase)*0.6;
-    });
-  });
-
-  if(gameRunning&&player.group){
-    let dx=0,dz=0;
-    if(keys['KeyW']||keys['ArrowUp'])    dz-=1;
-    if(keys['KeyS']||keys['ArrowDown'])  dz+=1;
-    if(keys['KeyA']||keys['ArrowLeft'])  dx-=1;
-    if(keys['KeyD']||keys['ArrowRight']) dx+=1;
-    if(joy.active){dx+=joy.dx;dz+=joy.dz;}
-    const moving=Math.hypot(dx,dz)>0.1;
-
-    if(moving){
-      const len=Math.hypot(dx,dz);dx/=len;dz/=len;
-      const nx=Math.max(-BOUND+0.6,Math.min(BOUND-0.6,player.x+dx*player.speed*dt));
-      const nz=Math.max(-BOUND+0.6,Math.min(BOUND-0.6,player.z+dz*player.speed*dt));
-      if(!obstacles.some(o=>Math.hypot(nx-o.x,nz-o.z)<o.r+player.radius)){player.x=nx;player.z=nz;}
-      player.facing=Math.atan2(dx,dz);
+    :root {
+      --orange: #ff7b2e;
+      --pink: #ff4da6;
+      --yellow: #FFD93D;
+      --white: #FFFEF5;
     }
 
-    const bobY=moving?Math.sin(now*0.013)*0.055:Math.sin(now*0.004)*0.02;
-    player.group.position.set(player.x,bobY,player.z);
-    player.group.rotation.y=player.facing;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-    // Spotlight follow
-    playerSpot.position.set(player.x,7,player.z);
-    playerSpot.target.position.set(player.x,0,player.z);
-    playerSpot.target.updateMatrixWorld();
+    body {
+      overflow: hidden;
+      font-family: 'Nunito', sans-serif;
+      background: #ffb347;
+      touch-action: none;
+      user-select: none;
+    }
 
-    // Collect flowers
-    for(const f of flowers){
-      if(f.collected)continue;
-      f.mesh.rotation.y=t*1.5+f.phase;
-      f.mesh.position.y=0.3+Math.sin(t*2.5+f.phase)*0.1;
-      if(Math.hypot(player.x-f.x,player.z-f.z)<1.0){
-        f.collected=true;flowerGroup.remove(f.mesh);
-        spawnParticles(f.x,f.z);
-        score+=10;collected++;updateHUD();showPopup();
-        if(collected>=TOTAL)endGame(true);
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: block;
+    }
+
+    #ui {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #hud {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+    }
+
+    .pill {
+      background: var(--white);
+      border: 3px solid #333;
+      border-radius: 999px;
+      padding: 5px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 3px 3px 0 #333;
+    }
+
+    .pill-icon {
+      font-size: clamp(14px, 3vw, 18px);
+    }
+
+    .pill-val {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(16px, 3.5vw, 22px);
+      color: #333;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    #timer-pill .pill-val {
+      color: #cc3300;
+    }
+
+    #timer-pill.urgent {
+      animation: tshake .25s infinite;
+    }
+
+    @keyframes tshake {
+
+      0%,
+      100% {
+        transform: rotate(-2deg)
+      }
+
+      50% {
+        transform: rotate(2deg)
       }
     }
 
-    camera.position.x+=(player.x*0.3-camera.position.x)*0.07;
-    camera.position.z+=(player.z*0.3+18-camera.position.z)*0.07;
-    camera.position.y+=(14-camera.position.y)*0.05;
-    camera.lookAt(player.x,0.8,player.z);
-  }
+    #popup {
+      position: absolute;
+      top: 44%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(22px, 5vw, 34px);
+      color: var(--pink);
+      -webkit-text-stroke: 2px #333;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+    }
 
-  for(let i=particles.length-1;i>=0;i--){
-    const p=particles[i];p.life-=dt*1.6;
-    if(p.life<=0){scene.remove(p.mesh);particles.splice(i,1);continue;}
-    p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;
-    p.vy-=9.8*dt;p.mesh.material.opacity=p.life;
-  }
+    .pop-go {
+      animation: popUp .75s ease-out forwards;
+    }
 
-  renderer.render(scene,camera);
-}
-animate(0);
-</script>
+    @keyframes popUp {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(.8)
+      }
+
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1.25)
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -160%) scale(.9)
+      }
+    }
+
+    #ctrl {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      opacity: .5;
+    }
+
+    .crow {
+      display: flex;
+      gap: 5px;
+    }
+
+    .key {
+      background: var(--white);
+      border: 2px solid #555;
+      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka One', cursive;
+      font-size: 12px;
+      color: #333;
+      box-shadow: 2px 2px 0 #555;
+    }
+
+    @media (hover:none) and (pointer:coarse) {
+      #ctrl {
+        display: none;
+      }
+    }
+
+    #joystick-zone {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 20;
+      pointer-events: all;
+      display: none;
+    }
+
+    #joystick-outer {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: rgba(255, 140, 60, 0.25);
+      border: 3px solid rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    #joystick-inner {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      pointer-events: none;
+      transition: transform 0.05s;
+    }
+
+    @media (hover:none) and (pointer:coarse) {
+      #joystick-zone {
+        display: block;
+      }
+
+      .pill:first-child {
+        display: none !important;
+      }
+    }
+
+    #back-btn {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 20;
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(12px, 3vw, 14px);
+      background: #fff;
+      color: #333;
+      border: 3px solid #333;
+      border-radius: 999px;
+      padding: 7px 16px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #333;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    #back-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 #333;
+    }
+
+    .crow {
+      display: flex;
+      gap: 5px;
+    }
+
+    .key {
+      background: var(--white);
+      border: 2px solid #555;
+      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka One', cursive;
+      font-size: 12px;
+      color: #333;
+      box-shadow: 2px 2px 0 #555;
+    }
+
+    #screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 140, 60, .88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: all;
+      transition: opacity .3s;
+    }
+
+    #screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .card {
+      background: var(--white);
+      border: 4px solid #333;
+      border-radius: 26px;
+      padding: clamp(18px, 4vw, 28px) clamp(20px, 5vw, 36px);
+      text-align: center;
+      box-shadow: 6px 6px 0 #333;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .card-emoji {
+      width: 120px;
+      height: 120px;
+      display: block;
+      margin: 0 auto 12px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+    }
+
+    .card-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(24px, 6vw, 34px);
+      color: var(--orange);
+      -webkit-text-stroke: 1.5px #333;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .card-sub {
+      font-size: clamp(12px, 2.5vw, 14px);
+      color: #666;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .card-stats {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(14px, 3vw, 17px);
+      color: #444;
+      margin-bottom: 16px;
+      line-height: 1.9;
+    }
+
+    .play-btn {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(16px, 3.5vw, 19px);
+      color: #333;
+      background: var(--pink);
+      border: 3px solid #333;
+      border-radius: 999px;
+      padding: 12px 36px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 #333;
+      transition: transform .1s, box-shadow .1s;
+      pointer-events: all;
+    }
+
+    .play-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #333;
+    }
+
+    .play-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 #333;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #ffb347;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 30;
+      font-family: 'Fredoka One', cursive;
+      color: #333;
+      font-size: clamp(15px, 3.5vw, 18px);
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .lpup {
+      width: clamp(90px, 20vw, 130px);
+      height: clamp(90px, 20vw, 130px);
+      object-fit: contain;
+      animation: pup .55s infinite alternate;
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
+    }
+
+    @keyframes pup {
+      from {
+        transform: translateY(0)
+      }
+
+      to {
+        transform: translateY(-12px)
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+  <a id="back-btn" href="./index.html">🏡 Home</a>
+
+  <div id="joystick-zone">
+    <div id="joystick-outer">
+      <div id="joystick-inner"></div>
+    </div>
+  </div>
+
+  <div id="loading">
+    <img class="lpup" src="./bingo.png" alt="Bingo">
+    <div>Setting up the backyard...</div>
+  </div>
+
+  <div id="ui">
+    <div id="hud">
+      <div class="pill"><span class="pill-icon">🌸</span><span class="pill-val" id="score-val">0</span></div>
+      <div class="pill"><span class="pill-icon">🌺</span><span class="pill-val" id="collect-val">0/12</span></div>
+      <div class="pill" id="timer-pill"><span class="pill-icon">⏰</span><span class="pill-val" id="timer-val">60</span>
+      </div>
+    </div>
+    <div id="popup">Pretty!</div>
+    <div id="ctrl">
+      <div class="crow">
+        <div class="key">W</div>
+      </div>
+      <div class="crow">
+        <div class="key">A</div>
+        <div class="key">S</div>
+        <div class="key">D</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen">
+    <div class="card">
+      <img class="card-emoji" src="./bingo.png" alt="Bingo">
+      <div class="card-title" id="s-title">Bingo's<br>Flower Hunt!</div>
+      <div class="card-sub" id="s-sub">Help Bingo collect all the flowers before Mum picks them! 🌸</div>
+      <div class="card-stats" id="s-stats" style="display:none"></div>
+      <button class="play-btn" id="play-btn" onclick="startGame()">Let's Go! 🌺</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script>
+    // ─── RENDERER ────────────────────────────────────────────────────────────────
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x5bbfea);  // warm blue sky
+    scene.fog = new THREE.FogExp2(0x5bbfea, 0.018);
+
+    const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 300);
+    camera.position.set(0, 14, 18);
+    camera.lookAt(0, 0, 0);
+
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    });
+
+    // ─── LIGHTING ─────────────────────────────────────────────────────────────────
+    scene.add(new THREE.AmbientLight(0xffe8cc, 0.4));
+    const sun = new THREE.DirectionalLight(0xffeecc, 1.6);
+    sun.position.set(12, 25, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1; sun.shadow.camera.far = 100;
+    sun.shadow.camera.left = sun.shadow.camera.bottom = -30;
+    sun.shadow.camera.right = sun.shadow.camera.top = 30;
+    scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xffaacc, 0.3);
+    fill.position.set(-8, 6, -5);
+    scene.add(fill);
+
+    // Spotlight that follows Bingo
+    const playerSpot = new THREE.SpotLight(0xffffff, 2.5, 9, Math.PI / 6, 0.4);
+    playerSpot.position.set(0, 7, 2);
+    scene.add(playerSpot);
+    scene.add(playerSpot.target);
+
+    // ─── MATERIALS ────────────────────────────────────────────────────────────────
+    const M = {
+      grass: new THREE.MeshStandardMaterial({ color: 0x268a18, roughness: 0.9 }),
+      grassDark: new THREE.MeshStandardMaterial({ color: 0x145c0a, roughness: 0.9 }),
+      fence: new THREE.MeshStandardMaterial({ color: 0xa0622a, roughness: 0.8 }),
+      fenceRail: new THREE.MeshStandardMaterial({ color: 0x7a4a1a, roughness: 0.8 }),
+      house: new THREE.MeshStandardMaterial({ color: 0xe8a820, roughness: 0.7 }),
+      roof: new THREE.MeshStandardMaterial({ color: 0xcc2211, roughness: 0.7 }),
+      door: new THREE.MeshStandardMaterial({ color: 0x5a3010, roughness: 0.7 }),
+      window: new THREE.MeshStandardMaterial({ color: 0x44aaee, roughness: 0.2, metalness: 0.2 }),
+      trampolineLegs: new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.6 }),
+      trampolineMat: new THREE.MeshStandardMaterial({ color: 0xee4411, roughness: 0.9 }), // red for Bingo!
+      clothesline: new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.6 }),
+      wood: new THREE.MeshStandardMaterial({ color: 0x7a4820, roughness: 0.9 }),
+      treeTrunk: new THREE.MeshStandardMaterial({ color: 0x5a3a18, roughness: 1.0 }),
+      treeLeaf: new THREE.MeshStandardMaterial({ color: 0x1a8a1a, roughness: 0.9 }),
+      treeLeaf2: new THREE.MeshStandardMaterial({ color: 0x0e6e0e, roughness: 0.9 }),
+      path: new THREE.MeshStandardMaterial({ color: 0xd4d4d4, roughness: 0.95 }),
+      flowerStem: new THREE.MeshStandardMaterial({ color: 0x116611, roughness: 0.9 }),
+    };
+
+    // ─── CONSTANTS ────────────────────────────────────────────────────────────────
+    const BOUND = 18;
+    const obstacles = [];
+    function addObs(x, z, r) { obstacles.push({ x, z, r }); }
+
+    // ─── HELPERS ─────────────────────────────────────────────────────────────────
+    function box(w, h, d, mat, x, y, z, ry = 0) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      m.position.set(x, y, z); m.rotation.y = ry;
+      m.castShadow = true; m.receiveShadow = true; scene.add(m); return m;
+    }
+    function cyl(rt, rb, h, seg, mat, x, y, z, rx = 0) {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+      m.position.set(x, y, z); m.rotation.x = rx;
+      m.castShadow = true; m.receiveShadow = true; scene.add(m); return m;
+    }
+    function sphere(r, mat, x, y, z) {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), mat);
+      m.position.set(x, y, z); m.castShadow = true; scene.add(m); return m;
+    }
+
+    // ─── GROUND ──────────────────────────────────────────────────────────────────
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(BOUND * 2 + 8, BOUND * 2 + 8), M.grass);
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    for (let i = 0; i < 18; i++) {
+      const p = new THREE.Mesh(new THREE.CircleGeometry(1.5 + Math.random() * 2.5, 7), M.grassDark);
+      p.rotation.x = -Math.PI / 2;
+      p.position.set((Math.random() - .5) * BOUND * 2, 0.005, (Math.random() - .5) * BOUND * 2);
+      scene.add(p);
+    }
+
+    // ─── FENCE ───────────────────────────────────────────────────────────────────
+    function fenceSegment(x1, z1, x2, z2) {
+      const dx = x2 - x1, dz = z2 - z1, len = Math.hypot(dx, dz), ang = Math.atan2(dx, dz);
+      const posts = Math.ceil(len / 2.2);
+      for (let i = 0; i <= posts; i++) {
+        const t = i / posts;
+        const m = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 0.2), M.fence);
+        m.position.set(x1 + dx * t, 0.75, z1 + dz * t); m.castShadow = true; scene.add(m);
+      }
+      [0.45, 0.95].forEach(h => {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, len + 0.1), M.fenceRail);
+        rail.position.set((x1 + x2) / 2, h, (z1 + z2) / 2); rail.rotation.y = ang; scene.add(rail);
+      });
+    }
+    const F = BOUND + 1;
+    fenceSegment(-F, -F, F, -F); fenceSegment(F, -F, F, F);
+    fenceSegment(F, F, -F, F); fenceSegment(-F, F, -F, -F);
+
+    // ─── HOUSE ───────────────────────────────────────────────────────────────────
+    {
+      const hx = -12, hz = -13;
+      box(9, 4, 6, M.house, hx, 2, hz);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(6.5, 3, 4), M.roof);
+      roof.position.set(hx, 5.5, hz); roof.rotation.y = Math.PI / 4; roof.castShadow = true; scene.add(roof);
+      box(1.0, 2.0, 0.15, M.door, hx, 1.0, hz + 3.05);
+      box(1.2, 0.9, 0.12, M.window, hx - 2.2, 2.2, hz + 3.05);
+      box(1.2, 0.9, 0.12, M.window, hx + 2.2, 2.2, hz + 3.05);
+      box(3, 0.2, 1, M.path, hx, 0.1, hz + 3.5);
+      addObs(hx, hz, 5.5);
+    }
+
+    // ─── CLOTHESLINE ─────────────────────────────────────────────────────────────
+    {
+      const clx = 8, clz = -10;
+      cyl(0.08, 0.08, 4.5, 8, M.clothesline, clx, 2.25, clz);
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 0.1, 20), M.clothesline);
+      disc.position.set(clx, 4.5, clz); scene.add(disc);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.8, 6), M.clothesline);
+        arm.rotation.z = Math.PI / 2; arm.position.set(clx + Math.cos(a) * 1.4, 4.5, clz + Math.sin(a) * 1.4);
+        arm.rotation.y = a; scene.add(arm);
+      }
+      cyl(0.3, 0.4, 0.3, 8, M.wood, clx, 0.15, clz);
+      addObs(clx, clz, 3.2);
+    }
+
+    // ─── TRAMPOLINE (red for Bingo!) ──────────────────────────────────────────────
+    {
+      const tx = 9, tz = 8, tramR = 2.8;
+      const frameTube = new THREE.Mesh(new THREE.TorusGeometry(tramR, 0.18, 8, 40), M.trampolineLegs);
+      frameTube.position.set(tx, 1.6, tz); frameTube.rotation.x = Math.PI / 2;
+      frameTube.castShadow = true; scene.add(frameTube);
+      const mat = new THREE.Mesh(new THREE.CircleGeometry(tramR - 0.2, 32), M.trampolineMat);
+      mat.position.set(tx, 1.62, tz); mat.rotation.x = -Math.PI / 2; scene.add(mat);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        cyl(0.08, 0.1, 1.6, 6, M.trampolineLegs, tx + Math.cos(a) * tramR * 0.9, 0.8, tz + Math.sin(a) * tramR * 0.9);
+        cyl(0.05, 0.05, 1.8, 6, M.trampolineLegs, tx + Math.cos(a) * (tramR + 0.1), 2.5, tz + Math.sin(a) * (tramR + 0.1));
+      }
+      addObs(tx, tz, tramR + 0.5);
+    }
+
+    // ─── TREES ────────────────────────────────────────────────────────────────────
+    function tree(x, z, sc = 1) {
+      cyl(0.22 * sc, 0.3 * sc, 2.0 * sc, 7, M.treeTrunk, x, 1.0 * sc, z);
+      sphere(1.5 * sc, M.treeLeaf, x, 3.2 * sc, z);
+      sphere(1.1 * sc, M.treeLeaf2, x + 0.4 * sc, 4.2 * sc, z + 0.2 * sc);
+      sphere(0.9 * sc, M.treeLeaf, x - 0.3 * sc, 4.6 * sc, z - 0.3 * sc);
+      addObs(x, z, 1.0 * sc);
+    }
+    [[-6, -14, 0.85], [4, -16, 0.95], [14, -12, 0.9], [15, 4, 1.0], [14, 14, 0.85], [-3, 15, 0.9], [-13, 12, 0.95], [-16, 2, 0.85]].forEach(([x, z, s]) => tree(x, z, s));
+
+    // ─── SANDPIT ─────────────────────────────────────────────────────────────────
+    {
+      const sandMat = new THREE.MeshStandardMaterial({ color: 0xe8c97a, roughness: 1.0 });
+      const sand = new THREE.Mesh(new THREE.CircleGeometry(2.2, 20), sandMat);
+      sand.rotation.x = -Math.PI / 2; sand.position.set(-10, 0.03, 8); scene.add(sand);
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const plank = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 0.25), M.wood);
+        plank.position.set(-10 + Math.cos(a) * 2.2, 0.15, 8 + Math.sin(a) * 2.2);
+        plank.rotation.y = a + Math.PI / 2; scene.add(plank);
+      }
+      cyl(0.22, 0.18, 0.35, 8, new THREE.MeshStandardMaterial({ color: 0xff9900 }), -9.5, 0.2, 8.5);
+      addObs(-10, 8, 2.6);
+    }
+
+    // ─── KENNEL ──────────────────────────────────────────────────────────────────
+    {
+      const kx = 5, kz = -14;
+      box(2.2, 1.8, 2.0, M.wood, kx, 0.9, kz);
+      const kRoof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.0, 4), M.roof);
+      kRoof.position.set(kx, 2.3, kz); kRoof.rotation.y = Math.PI / 4; kRoof.castShadow = true; scene.add(kRoof);
+      addObs(kx, kz, 1.5);
+    }
+
+    // ─── LARGE FLOWER GARDEN (Bingo's favourite!) ─────────────────────────────────
+    // Big flower bed along the back
+    const flowerColors = [0xff2288, 0xff6600, 0xffcc00, 0xff44aa, 0xff8833, 0xee1166, 0xffaa22];
+    function bigFlower(x, z, col, h = 0.8) {
+      cyl(0.05, 0.05, h, 5, M.flowerStem, x, h / 2, z);
+      // Petals
+      const petalMat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 });
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const petal = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), petalMat);
+        petal.position.set(x + Math.cos(a) * 0.25, h + 0.05, z + Math.sin(a) * 0.25);
+        petal.scale.y = 0.5; scene.add(petal);
+      }
+      // Centre
+      const centre = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), new THREE.MeshStandardMaterial({ color: 0xffee00, emissive: 0xffcc00, emissiveIntensity: 0.3 }));
+      centre.position.set(x, h + 0.08, z); scene.add(centre);
+    }
+
+    // Flower bed positions scattered around
+    const flowerPositions = [
+      [-2, -16, 0xff2288], [-4, -16, 0xff6600], [0, -16, 0xffcc00], [2, -16, 0xff44aa], [4, -16, 0xff8833],
+      [-1, -15, 0xee1166], [1, -15, 0xffaa22], [3, -15, 0xff2288], [-3, -15, 0xff6600],
+      [14, 6, 0xff44aa], [14, 8, 0xffcc00], [14, 10, 0xff2288],
+      [-15, -4, 0xff6600], [-15, -2, 0xff44aa], [-15, 0, 0xffcc00],
+      [6, 16, 0xff8833], [8, 16, 0xff2288], [10, 16, 0xffaa22], [4, 16, 0xee1166],
+    ];
+    flowerPositions.forEach(([x, z, col]) => bigFlower(x, z, col, 0.7 + Math.random() * 0.5));
+
+    // ─── STEPPING STONES PATH ────────────────────────────────────────────────────
+    {
+      const stoneMat = new THREE.MeshStandardMaterial({ color: 0xbbbbaa, roughness: 0.95 });
+      [[-9, 0.02, 3], [-9, 0.02, 1], [-9, 0.02, -1], [-9, 0.02, -3], [-10, 0.02, -5], [-11, 0.02, -7]].forEach(([x, y, z]) => {
+        const s = new THREE.Mesh(new THREE.CylinderGeometry(0.5 + Math.random() * 0.2, 0.5 + Math.random() * 0.2, 0.1, 7), stoneMat);
+        s.position.set(x, y, z); s.rotation.y = Math.random(); s.receiveShadow = true; scene.add(s);
+      });
+    }
+
+    // ─── BUTTERFLIES (floating decorative) ──────────────────────────────────────
+    const butterflies = [];
+    const butterflyColors = [0xff4488, 0xff8800, 0xffcc00, 0xff44cc];
+    for (let i = 0; i < 8; i++) {
+      const col = butterflyColors[i % butterflyColors.length];
+      const bm = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.3, side: THREE.DoubleSide });
+      const g = new THREE.Group();
+      // Two wings
+      [-1, 1].forEach(side => {
+        const wing = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.2), bm);
+        wing.position.x = side * 0.15; scene.add(wing); g.add(wing);
+      });
+      g.position.set((Math.random() - .5) * BOUND * 1.5, 2 + Math.random() * 2, (Math.random() - .5) * BOUND * 1.5);
+      scene.add(g);
+      butterflies.push({ group: g, phase: Math.random() * Math.PI * 2, cx: g.position.x, cz: g.position.z });
+    }
+
+    // ─── CLOUDS ──────────────────────────────────────────────────────────────────
+    const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1.0 });
+    function cloud(x, y, z, sc = 1) {
+      [[0, 0, 0, 1.0], [0.9, 0.3, 0, 0.8], [-0.8, 0.2, 0, 0.75], [0, 0.5, 0, 0.7]].forEach(([dx, dy, dz, r]) => {
+        const m = new THREE.Mesh(new THREE.SphereGeometry(r * sc, 8, 6), cloudMat);
+        m.position.set(x + dx * sc, y + dy * sc, z + dz * sc); scene.add(m);
+      });
+    }
+    cloud(-8, 18, -15, 1.2); cloud(6, 20, -18, 1.0); cloud(12, 17, -10, 0.9);
+    cloud(-14, 19, 5, 1.1); cloud(3, 21, 10, 0.8);
+
+    // ─── COLLECTIBLES: FLOWERS ────────────────────────────────────────────────────
+    const TOTAL = 12;
+    const flowerGroup = new THREE.Group();
+    scene.add(flowerGroup);
+    const flowers = [];
+
+    const collectColors = [0xff1177, 0xff6600, 0xffcc00, 0xff44bb];
+    function spawnFlowers() {
+      flowers.forEach(f => flowerGroup.remove(f.mesh));
+      flowers.length = 0;
+      for (let i = 0; i < TOTAL; i++) {
+        let fx, fz, bad, tries = 0;
+        do {
+          fx = (Math.random() - .5) * (BOUND * 2 - 4);
+          fz = (Math.random() - .5) * (BOUND * 2 - 4);
+          bad = Math.hypot(fx - player.x, fz - player.z) < 3
+            || obstacles.some(o => Math.hypot(fx - o.x, fz - o.z) < o.r + 1.5);
+          tries++;
+        } while (bad && tries < 100);
+
+        const col = collectColors[i % collectColors.length];
+        const g = new THREE.Group();
+        const stemM = new THREE.MeshStandardMaterial({ color: 0x116611, roughness: 0.9 });
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.6, 7), stemM);
+        g.add(stem);
+        const petalM = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.4, roughness: 0.6 });
+        for (let j = 0; j < 6; j++) {
+          const a = (j / 6) * Math.PI * 2;
+          const petal = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), petalM);
+          petal.position.set(Math.cos(a) * 0.22, 0.32, Math.sin(a) * 0.22);
+          petal.scale.y = 0.45; g.add(petal);
+        }
+        const ctrM = new THREE.MeshStandardMaterial({ color: 0xffee00, emissive: 0xffdd00, emissiveIntensity: 0.5 });
+        const ctr = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), ctrM);
+        ctr.position.y = 0.34; g.add(ctr);
+        // Glow
+        const gl = new THREE.PointLight(col, 1.0, 2.5);
+        gl.position.y = 0.5; g.add(gl);
+
+        g.position.set(fx, 0.3, fz);
+        flowerGroup.add(g);
+        flowers.push({ mesh: g, x: fx, z: fz, collected: false, phase: Math.random() * Math.PI * 2 });
+      }
+    }
+
+    // ─── PARTICLES ───────────────────────────────────────────────────────────────
+    const particles = [];
+    const pCols = [0xff1177, 0xff6600, 0xffcc00, 0xff44bb, 0xffffff];
+    function spawnParticles(x, z) {
+      for (let i = 0; i < 16; i++) {
+        const col = pCols[Math.floor(Math.random() * pCols.length)];
+        const m = new THREE.Mesh(new THREE.SphereGeometry(0.07 + Math.random() * 0.09, 6, 6),
+          new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9, transparent: true }));
+        m.position.set(x, 0.45, z);
+        const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 5;
+        scene.add(m);
+        particles.push({ mesh: m, vx: Math.cos(a) * sp, vy: 4 + Math.random() * 5, vz: Math.sin(a) * sp, life: 1.0 });
+      }
+    }
+
+    // ─── RENDER START SCREEN AVATAR ──────────────────────────────────────────────
+    function renderGLBSnapshot(url, imgId) {
+      const SIZE = 220;
+      const oc = document.createElement('canvas');
+      oc.width = SIZE; oc.height = SIZE;
+      const or = new THREE.WebGLRenderer({ canvas: oc, antialias: true, alpha: true });
+      or.setSize(SIZE, SIZE); or.setClearColor(0x000000, 0); or.outputEncoding = THREE.sRGBEncoding;
+      const os = new THREE.Scene();
+      const cam = new THREE.PerspectiveCamera(42, 1, 0.01, 100);
+      cam.position.set(0, 1.2, 4.5); cam.lookAt(0, 0.8, 0);
+      os.add(new THREE.AmbientLight(0xffffff, 1.2));
+      const kl = new THREE.DirectionalLight(0xffffff, 2.2); kl.position.set(2, 4, 3); os.add(kl);
+      const rl = new THREE.DirectionalLight(0xffddaa, 1.0); rl.position.set(-2, 2, -2); os.add(rl);
+      new THREE.GLTFLoader().load(url, gltf => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const sz = box.getSize(new THREE.Vector3());
+        model.scale.setScalar(2.0 / Math.max(sz.x, sz.y, sz.z));
+        const box2 = new THREE.Box3().setFromObject(model);
+        model.position.sub(box2.getCenter(new THREE.Vector3()));
+        model.rotation.y = -Math.PI * 0.12;
+        os.add(model);
+        let f = 0;
+        (function snap() {
+          f++; or.render(os, cam);
+          if (f < 8) requestAnimationFrame(snap);
+          else { const img = document.getElementById(imgId); if (img) img.src = oc.toDataURL('image/png'); or.dispose(); }
+        })();
+      });
+    }
+    renderGLBSnapshot('./bingo.glb', 'start-avatar');
+
+    // ─── PLAYER ──────────────────────────────────────────────────────────────────
+    const player = { group: null, mixer: null, blastAction: null, x: 0, z: 2, speed: 6, radius: 0.5, facing: 0, blasting: false };
+
+    new THREE.GLTFLoader().load('./bingo.glb', gltf => {
+      const model = gltf.scene;
+      const b = new THREE.Box3().setFromObject(model);
+      model.scale.setScalar(1.8 / b.getSize(new THREE.Vector3()).y);
+      const b2 = new THREE.Box3().setFromObject(model);
+      model.position.y = -b2.min.y;
+      model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+
+      const group = new THREE.Group();
+      group.add(model);
+      group.position.set(0, 0, 2);
+      scene.add(group);
+      player.group = group;
+      player.x = 0; player.z = 2;
+
+      // Warm orange glow under Bingo
+      const glow = new THREE.PointLight(0xff7722, 1.2, 3.5);
+      glow.position.y = 0.2; group.add(glow);
+
+      if (gltf.animations.length > 0) {
+        const mixer = new THREE.AnimationMixer(model);
+        player.mixer = mixer;
+        const action = mixer.clipAction(gltf.animations[0]);
+        action.loop = THREE.LoopOnce; action.clampWhenFinished = true;
+        player.blastAction = action;
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+
+    }, undefined, err => {
+      console.error('Bingo load error:', err);
+      // Fallback orange box
+      const g = new THREE.Group();
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.4), new THREE.MeshStandardMaterial({ color: 0xff7722 }));
+      b.position.y = 0.5; g.add(b);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff5500 }));
+      h.position.y = 1.3; g.add(h);
+      scene.add(g); player.group = g;
+      document.getElementById('loading').classList.add('hidden');
+    });
+
+    // ─── INPUT ────────────────────────────────────────────────────────────────────
+    const keys = {};
+    document.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
+    document.addEventListener('keyup', e => keys[e.code] = false);
+
+    // ── Virtual Joystick ──────────────────────────────────────────────────────
+    const joystickOuter = document.getElementById('joystick-outer');
+    const joystickInner = document.getElementById('joystick-inner');
+    const JMAX = 40;
+    const joy = { active: false, id: null, startX: 0, startY: 0, dx: 0, dz: 0 };
+
+    joystickOuter.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      joy.active = true; joy.id = t.identifier;
+      joy.startX = t.clientX; joy.startY = t.clientY;
+      joy.dx = 0; joy.dz = 0;
+    }, { passive: false });
+
+    document.addEventListener('touchmove', e => {
+      if (!joy.active) return;
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier !== joy.id) continue;
+        const ox = t.clientX - joy.startX;
+        const oy = t.clientY - joy.startY;
+        const dist = Math.hypot(ox, oy);
+        const clamped = Math.min(dist, JMAX);
+        const angle = Math.atan2(oy, ox);
+        joy.dx = Math.cos(angle) * (clamped / JMAX);
+        joy.dz = Math.sin(angle) * (clamped / JMAX);
+        joystickInner.style.transform = `translate(${Math.cos(angle) * clamped}px, ${Math.sin(angle) * clamped}px)`;
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', e => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === joy.id) {
+          joy.active = false; joy.dx = 0; joy.dz = 0;
+          joystickInner.style.transform = 'translate(0,0)';
+        }
+      }
+    });
+
+
+    // ─── GAME STATE ───────────────────────────────────────────────────────────────
+    let score = 0, collected = 0, timeLeft = 60, gameRunning = false, timerInterval = null, lastTime = 0;
+
+    const scoreEl = document.getElementById('score-val');
+    const collectEl = document.getElementById('collect-val');
+    const timerEl = document.getElementById('timer-val');
+    const timerPill = document.getElementById('timer-pill');
+    const popup = document.getElementById('popup');
+    const screen = document.getElementById('screen');
+
+    function updateHUD() { scoreEl.textContent = score; collectEl.textContent = `${collected}/${TOTAL}`; timerEl.textContent = timeLeft; }
+
+    const msgs = ['So pretty! 🌸', 'Ooh lovely!', 'Found one! 🌺', 'Beautiful!', 'Wackadoo!', 'Mum will love this!'];
+    function showPopup() {
+      popup.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+      popup.classList.remove('pop-go'); void popup.offsetWidth; popup.classList.add('pop-go');
+    }
+
+    function startGame() {
+      if (!player.group) return;
+      score = 0; collected = 0; timeLeft = 60; gameRunning = true;
+      player.blasting = false; player.x = 0; player.z = 2;
+      player.group.position.set(0, 0, 2);
+      if (player.mixer) player.mixer.stopAllAction();
+      spawnFlowers(); updateHUD();
+      screen.classList.add('hidden');
+      document.getElementById('s-stats').style.display = 'none';
+      timerPill.classList.remove('urgent');
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!gameRunning) return;
+        timeLeft--; updateHUD();
+        if (timeLeft <= 10) timerPill.classList.add('urgent');
+        if (timeLeft <= 0) endGame(false);
+      }, 1000);
+    }
+
+    function endGame(won) {
+      gameRunning = false; clearInterval(timerInterval); timerPill.classList.remove('urgent');
+      if (!won && player.blastAction) { player.blasting = true; player.blastAction.reset().play(); }
+      const sa = document.getElementById('start-avatar');
+      if (sa) sa.style.filter = won ? 'none' : 'grayscale(0.5)';
+      document.getElementById('s-title').textContent = won ? "That's Fancy!" : 'Oh No! Time\'s Up!';
+      document.getElementById('s-sub').textContent = won ? 'Bingo found all the flowers! Mum will be so happy! 🌸' : 'Mum picked the rest! Try again!';
+      const stats = document.getElementById('s-stats');
+      stats.style.display = 'block'; stats.innerHTML = `🌸 Flowers: ${collected}/${TOTAL}<br>⭐ Score: ${score}`;
+      document.getElementById('play-btn').textContent = 'Play Again! 🌺';
+      screen.classList.remove('hidden');
+    }
+
+    // ─── GAME LOOP ────────────────────────────────────────────────────────────────
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      if (player.mixer && player.blasting) player.mixer.update(dt);
+
+      // Animate butterflies
+      const t = now / 1000;
+      butterflies.forEach((b, i) => {
+        b.group.position.x = b.cx + Math.sin(t * 0.8 + b.phase) * 3;
+        b.group.position.z = b.cz + Math.cos(t * 0.6 + b.phase) * 3;
+        b.group.position.y = 2.0 + Math.sin(t * 1.5 + b.phase) * 0.5;
+        b.group.rotation.y = Math.sin(t * 0.8 + b.phase);
+        // Wing flap
+        b.group.children.forEach((wing, wi) => {
+          wing.rotation.y = (wi === 0 ? 1 : -1) * Math.sin(t * 8 + b.phase) * 0.6;
+        });
+      });
+
+      if (gameRunning && player.group) {
+        let dx = 0, dz = 0;
+        if (keys['KeyW'] || keys['ArrowUp']) dz -= 1;
+        if (keys['KeyS'] || keys['ArrowDown']) dz += 1;
+        if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1;
+        if (keys['KeyD'] || keys['ArrowRight']) dx += 1;
+        if (joy.active) { dx += joy.dx; dz += joy.dz; }
+        const moving = Math.hypot(dx, dz) > 0.1;
+
+        if (moving) {
+          const len = Math.hypot(dx, dz); dx /= len; dz /= len;
+          const nx = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.x + dx * player.speed * dt));
+          const nz = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.z + dz * player.speed * dt));
+          if (!obstacles.some(o => Math.hypot(nx - o.x, nz - o.z) < o.r + player.radius)) { player.x = nx; player.z = nz; }
+          player.facing = Math.atan2(dx, dz);
+        }
+
+        const bobY = moving ? Math.sin(now * 0.013) * 0.055 : Math.sin(now * 0.004) * 0.02;
+        player.group.position.set(player.x, bobY, player.z);
+        player.group.rotation.y = player.facing;
+
+        // Spotlight follow
+        playerSpot.position.set(player.x, 7, player.z);
+        playerSpot.target.position.set(player.x, 0, player.z);
+        playerSpot.target.updateMatrixWorld();
+
+        // Collect flowers
+        for (const f of flowers) {
+          if (f.collected) continue;
+          f.mesh.rotation.y = t * 1.5 + f.phase;
+          f.mesh.position.y = 0.3 + Math.sin(t * 2.5 + f.phase) * 0.1;
+          if (Math.hypot(player.x - f.x, player.z - f.z) < 1.0) {
+            f.collected = true; flowerGroup.remove(f.mesh);
+            spawnParticles(f.x, f.z);
+            score += 10; collected++; updateHUD(); showPopup();
+            if (collected >= TOTAL) endGame(true);
+          }
+        }
+
+        camera.position.x += (player.x * 0.3 - camera.position.x) * 0.07;
+        camera.position.z += (player.z * 0.3 + 18 - camera.position.z) * 0.07;
+        camera.position.y += (14 - camera.position.y) * 0.05;
+        camera.lookAt(player.x, 0.8, player.z);
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]; p.life -= dt * 1.6;
+        if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); continue; }
+        p.mesh.position.x += p.vx * dt; p.mesh.position.y += p.vy * dt; p.mesh.position.z += p.vz * dt;
+        p.vy -= 9.8 * dt; p.mesh.material.opacity = p.life;
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate(0);
+  </script>
 </body>
+
 </html>
