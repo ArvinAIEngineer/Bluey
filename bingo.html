@@ -41,7 +41,12 @@
   #screen { position:absolute; inset:0; background:rgba(255,140,60,.88); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; pointer-events:all; transition:opacity .3s; }
   #screen.hidden { opacity:0; pointer-events:none; }
   .card { background:var(--white); border:4px solid #333; border-radius:26px; padding:28px 36px; text-align:center; box-shadow:6px 6px 0 #333; max-width:400px; width:90%; }
-  .card-emoji { font-size:58px; margin-bottom:8px; display:block; }
+  .card-emoji {
+    width: 120px; height: 120px;
+    display: block; margin: 0 auto 12px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2));
+  }
   .card-title { font-family:'Fredoka One',cursive; font-size:34px; color:var(--orange); -webkit-text-stroke:1.5px #333; line-height:1.1; margin-bottom:6px; }
   .card-sub { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
   .card-stats { font-family:'Fredoka One',cursive; font-size:17px; color:#444; margin-bottom:20px; line-height:1.9; }
@@ -51,7 +56,7 @@
 
   #loading { position:fixed; inset:0; background:#ffb347; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:30; font-family:'Fredoka One',cursive; color:#333; font-size:18px; }
   #loading.hidden { display:none; }
-  .lpup { font-size:52px; animation:pup .55s infinite alternate; }
+  .lpup { width:130px; height:130px; object-fit:contain; animation:pup .55s infinite alternate; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.25)); }
   @keyframes pup { from{transform:translateY(0)} to{transform:translateY(-12px)} }
 </style>
 </head>
@@ -60,7 +65,7 @@
 <a id="back-btn" href="./index.html">🏡 Home</a>
 
 <div id="loading">
-  <div class="lpup">🐕</div>
+  <img class="lpup" src="./bingo.png" alt="Bingo">
   <div>Setting up the backyard...</div>
 </div>
 
@@ -79,7 +84,7 @@
 
 <div id="screen">
   <div class="card">
-    <span class="card-emoji" id="s-emoji">🦊</span>
+    <img class="card-emoji" src="./bingo.png" alt="Bingo">
     <div class="card-title" id="s-title">Bingo's<br>Flower Hunt!</div>
     <div class="card-sub" id="s-sub">Help Bingo collect all the flowers before Mum picks them! 🌸</div>
     <div class="card-stats" id="s-stats" style="display:none"></div>
@@ -406,6 +411,38 @@ function spawnParticles(x,z) {
   }
 }
 
+// ─── RENDER START SCREEN AVATAR ──────────────────────────────────────────────
+function renderGLBSnapshot(url, imgId) {
+  const SIZE = 220;
+  const oc = document.createElement('canvas');
+  oc.width = SIZE; oc.height = SIZE;
+  const or = new THREE.WebGLRenderer({ canvas: oc, antialias: true, alpha: true });
+  or.setSize(SIZE, SIZE); or.setClearColor(0x000000, 0); or.outputEncoding = THREE.sRGBEncoding;
+  const os = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(42, 1, 0.01, 100);
+  cam.position.set(0, 1.2, 4.5); cam.lookAt(0, 0.8, 0);
+  os.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const kl = new THREE.DirectionalLight(0xffffff, 2.2); kl.position.set(2,4,3); os.add(kl);
+  const rl = new THREE.DirectionalLight(0xffddaa, 1.0); rl.position.set(-2,2,-2); os.add(rl);
+  new THREE.GLTFLoader().load(url, gltf => {
+    const model = gltf.scene;
+    const box = new THREE.Box3().setFromObject(model);
+    const sz = box.getSize(new THREE.Vector3());
+    model.scale.setScalar(2.0 / Math.max(sz.x, sz.y, sz.z));
+    const box2 = new THREE.Box3().setFromObject(model);
+    model.position.sub(box2.getCenter(new THREE.Vector3()));
+    model.rotation.y = -Math.PI * 0.12;
+    os.add(model);
+    let f = 0;
+    (function snap() {
+      f++; or.render(os, cam);
+      if (f < 8) requestAnimationFrame(snap);
+      else { const img = document.getElementById(imgId); if(img) img.src = oc.toDataURL('image/png'); or.dispose(); }
+    })();
+  });
+}
+renderGLBSnapshot('./bingo.glb', 'start-avatar');
+
 // ─── PLAYER ──────────────────────────────────────────────────────────────────
 const player={group:null,mixer:null,blastAction:null,x:0,z:2,speed:6,radius:0.5,facing:0,blasting:false};
 
@@ -495,7 +532,8 @@ function startGame(){
 function endGame(won){
   gameRunning=false;clearInterval(timerInterval);timerPill.classList.remove('urgent');
   if(!won&&player.blastAction){player.blasting=true;player.blastAction.reset().play();}
-  document.getElementById('s-emoji').textContent=won?'🏆':'😅';
+  const sa = document.getElementById('start-avatar');
+  if (sa) sa.style.filter = won ? 'none' : 'grayscale(0.5)';
   document.getElementById('s-title').textContent=won?"That's Fancy!":'Oh No! Time\'s Up!';
   document.getElementById('s-sub').textContent=won?'Bingo found all the flowers! Mum will be so happy! 🌸':'Mum picked the rest! Try again!';
   const stats=document.getElementById('s-stats');
