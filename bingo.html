@@ -768,13 +768,22 @@
 
     // ─── PARTICLES ───────────────────────────────────────────────────────────────
     const particles = [];
+    const PARTICLE_GEOM = new THREE.SphereGeometry(0.08, 6, 6);
+    let particleMats = [];
+
     function spawnParticles(x, z) {
-      const pCols = ITEM_DEF.popColors || [0xffffff];
+      if (particleMats.length === 0) {
+        const pCols = ITEM_DEF.popColors || [0xffffff];
+        particleMats = pCols.map(col => new THREE.MeshStandardMaterial({
+          color: col, emissive: col, emissiveIntensity: 0.9, transparent: true
+        }));
+      }
+
       for (let i = 0; i < 16; i++) {
-        const col = pCols[Math.floor(Math.random() * pCols.length)];
-        const m = new THREE.Mesh(new THREE.SphereGeometry(0.07 + Math.random() * 0.09, 6, 6),
-          new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9, transparent: true }));
+        const mat = particleMats[Math.floor(Math.random() * particleMats.length)];
+        const m = new THREE.Mesh(PARTICLE_GEOM, mat);
         m.position.set(x, 0.45, z);
+        m.scale.setScalar(0.8 + Math.random() * 0.4);
         const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 5;
         scene.add(m);
         particles.push({ mesh: m, vx: Math.cos(a) * sp, vy: 4 + Math.random() * 5, vz: Math.sin(a) * sp, life: 1.0 });
@@ -822,9 +831,7 @@
       model.scale.setScalar(1.8 / b.getSize(new THREE.Vector3()).y);
       const b2 = new THREE.Box3().setFromObject(model);
       const center = b2.getCenter(new THREE.Vector3());
-      model.position.x = -center.x;
-      model.position.z = -center.z;
-      model.position.y = -new THREE.Box3().setFromObject(model).min.y;
+      model.position.set(-center.x, -b2.min.y, -center.z);
       model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
 
       const group = new THREE.Group();
