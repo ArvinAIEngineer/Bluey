@@ -580,7 +580,8 @@
         mesh.castShadow = true;
         g.add(mesh);
 
-        const gl = new THREE.PointLight(0xaadeff, 1.8, 4.0);
+        // Deep Blue Spotlight for maximum contrast against green
+        const gl = new THREE.PointLight(0x0000ff, 2.5, 4.5);
         gl.position.y = 0.5;
         g.add(gl);
 

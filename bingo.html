@@ -767,7 +767,8 @@
         g.add(mesh);
 
         // Glow
-        const gl = new THREE.PointLight(0xaadeff, 1.8, 4.0);
+        // Deep Blue Spotlight
+        const gl = new THREE.PointLight(0x0000ff, 2.5, 4.5);
         gl.position.y = 0.5; g.add(gl);
 
         g.position.set(fx, 0.3, fz);

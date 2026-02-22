@@ -5,31 +5,26 @@
 (function () {
   const M = {
     // Basic Materials
-    red: new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.4, emissive: 0x330000 }), // Hot Red
-    green: new THREE.MeshStandardMaterial({ color: 0x00ff00, roughness: 0.1, emissive: 0x003300 }), // Pure Neon Green
-    blue: new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.1, emissive: 0x003333 }), // Electric Cyan
-    yellow: new THREE.MeshStandardMaterial({ color: 0xffff00, roughness: 0.1, emissive: 0x333300 }), // Bright Yellow
-    orange: new THREE.MeshStandardMaterial({ color: 0xffa500, roughness: 0.4, emissive: 0x331100 }), // Vivid Orange
-    purple: new THREE.MeshStandardMaterial({ color: 0xff00ff, roughness: 0.1, emissive: 0x330033 }), // Neon Magenta/Purple
-    pink: new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.1, emissive: 0x330011 }), // Hot Pink
-    white: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, emissive: 0x555555 }), // Super White
-    brown: new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.9 }),
-    black: new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.8 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 0.9, emissive: 0x443300 }),
-    silver: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, metalness: 0.9 }),
-    gem: new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.0, transparent: true, opacity: 0.9, metalness: 0.8, emissive: 0x00ffff }),
-    wood: new THREE.MeshStandardMaterial({ color: 0x5d2906, roughness: 1.0 }),
-    biscuit: new THREE.MeshStandardMaterial({ color: 0xffd19a, roughness: 0.9 }),
-    choc: new THREE.MeshStandardMaterial({ color: 0x221100, roughness: 1.0 }),
-    stem: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }), // White stem for high contrast
-    teal: new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.1 }),
-    darkgreen: new THREE.MeshStandardMaterial({ color: 0x004400, roughness: 0.9 }),
-    lime: new THREE.MeshStandardMaterial({ color: 0xccff00, roughness: 0.1 }),
+    red: new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.5, roughness: 0.2 }),
+    blue: new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.5, roughness: 0.2 }), // Cyan
+    white: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.1 }),
+    pink: new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5, roughness: 0.2 }),
+    orange: new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff6600, emissiveIntensity: 0.5, roughness: 0.2 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffcc00, emissiveIntensity: 0.3, metalness: 0.8 }),
+    purple: new THREE.MeshStandardMaterial({ color: 0x9900ff, emissive: 0x9900ff, emissiveIntensity: 0.5, roughness: 0.2 }),
+    black: new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 1.0 }),
+    contrast: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.0, transparent: true, opacity: 0.9 }), // White base disk
   };
 
-  // Helper to build compound items
+  // Helper to build compound items with a contrast base
   function buildGroup() {
-    return new THREE.Group();
+    const g = new THREE.Group();
+    // Add a high-contrast white disk at the ground level (y ≈ 0 relative to group)
+    const base = new THREE.Mesh(new THREE.CircleGeometry(0.35, 12), M.contrast);
+    base.rotation.x = -Math.PI / 2;
+    base.position.y = -0.4; // Slightly below the item
+    g.add(base);
+    return g;
   }
 
   // --- ITEM BUILDERS ---
@@ -490,9 +485,9 @@
   window.ITEMS_LIST = catalog;
   window.ITEMS = {};
   catalog.forEach(item => {
-    // MAX GLOW for visibility
-    item.glow = 0xffffff; // White glow for ultimate pop
-    item.popColors = [0xffffff, item.color || 0xffffff, 0x00ffff];
+    // BLUE CONTRAST GLOW
+    item.glow = 0x4444ff;
+    item.popColors = [0xffffff, 0x00ffff, 0x4444ff];
     window.ITEMS[item.id] = item;
   });
 
