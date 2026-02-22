@@ -8,43 +8,60 @@
     @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800&display=swap');
     :root { --blue:#4db8f0; --yellow:#FFD93D; --white:#FFFEF5; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { overflow:hidden; font-family:'Nunito',sans-serif; background:#87CEEB; }
+    body { overflow:hidden; font-family:'Nunito',sans-serif; background:#87CEEB; touch-action:none; user-select:none; }
     #canvas { position:fixed; top:0; left:0; display:block; }
     #ui { position:fixed; inset:0; pointer-events:none; z-index:10; }
-    #hud { position:absolute; top:16px; left:50%; transform:translateX(-50%); display:flex; gap:12px; }
-    .pill { background:var(--white); border:3px solid #333; border-radius:999px; padding:6px 18px; display:flex; align-items:center; gap:8px; box-shadow:3px 3px 0 #333; }
-    .pill-icon { font-size:18px; }
-    .pill-val { font-family:'Fredoka One',cursive; font-size:22px; color:#333; min-width:28px; text-align:center; }
+    #hud { position:absolute; top:16px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+    .pill { background:var(--white); border:3px solid #333; border-radius:999px; padding:5px 14px; display:flex; align-items:center; gap:6px; box-shadow:3px 3px 0 #333; }
+    .pill-icon { font-size:clamp(14px,3vw,18px); }
+    .pill-val { font-family:'Fredoka One',cursive; font-size:clamp(16px,3.5vw,22px); color:#333; min-width:24px; text-align:center; }
     #timer-pill .pill-val { color:#e05c2a; }
     #timer-pill.urgent { animation:tshake .25s infinite; }
     @keyframes tshake { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
-    #popup { position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); font-family:'Fredoka One',cursive; font-size:34px; color:var(--yellow); -webkit-text-stroke:2px #333; opacity:0; pointer-events:none; white-space:nowrap; }
+    #popup { position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); font-family:'Fredoka One',cursive; font-size:clamp(22px,5vw,34px); color:var(--yellow); -webkit-text-stroke:2px #333; opacity:0; pointer-events:none; white-space:nowrap; }
     .pop-go { animation:popUp .75s ease-out forwards; }
     @keyframes popUp { 0%{opacity:1;transform:translate(-50%,-50%) scale(.8)} 50%{opacity:1;transform:translate(-50%,-100%) scale(1.25)} 100%{opacity:0;transform:translate(-50%,-160%) scale(.9)} }
+
+    /* Keyboard hints — hide on touch, show on desktop */
     #ctrl { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:5px; opacity:.5; }
     .crow { display:flex; gap:5px; }
     .key { background:var(--white); border:2px solid #555; border-radius:6px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-family:'Fredoka One',cursive; font-size:12px; color:#333; box-shadow:2px 2px 0 #555; }
-    #back-btn { position:fixed; top:14px; left:14px; z-index:20; font-family:'Fredoka One',cursive; font-size:14px; background:#fff; color:#333; border:3px solid #333; border-radius:999px; padding:7px 16px; cursor:pointer; box-shadow:3px 3px 0 #333; text-decoration:none; display:flex; align-items:center; gap:5px; transition:transform 0.1s,box-shadow 0.1s; }
+    @media (hover:none) and (pointer:coarse) { #ctrl { display:none; } }
+
+    /* Virtual joystick */
+    #joystick-zone { position:fixed; bottom:20px; left:20px; z-index:20; pointer-events:all; display:none; }
+    #joystick-outer { width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,0.2); border:3px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    #joystick-inner { width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.75); border:2px solid rgba(0,0,0,0.2); box-shadow:0 2px 8px rgba(0,0,0,0.3); pointer-events:none; transition:transform 0.05s; }
+    @media (hover:none) and (pointer:coarse) { #joystick-zone { display:block; } }
+
+    #back-btn { position:fixed; top:14px; left:14px; z-index:20; font-family:'Fredoka One',cursive; font-size:clamp(12px,3vw,14px); background:#fff; color:#333; border:3px solid #333; border-radius:999px; padding:7px 14px; cursor:pointer; box-shadow:3px 3px 0 #333; text-decoration:none; display:flex; align-items:center; gap:5px; transition:transform 0.1s,box-shadow 0.1s; }
     #back-btn:hover { transform:translate(-2px,-2px); box-shadow:5px 5px 0 #333; }
     #screen { position:absolute; inset:0; background:rgba(77,184,240,.88); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; pointer-events:all; transition:opacity .3s; }
     #screen.hidden { opacity:0; pointer-events:none; }
-    .card { background:var(--white); border:4px solid #333; border-radius:26px; padding:28px 36px; text-align:center; box-shadow:6px 6px 0 #333; max-width:400px; width:90%; }
-    .card-img { width:120px; height:120px; object-fit:contain; display:block; margin:0 auto 12px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.2)); }
-    .card-title { font-family:'Fredoka One',cursive; font-size:34px; color:var(--blue); -webkit-text-stroke:1.5px #333; line-height:1.1; margin-bottom:6px; }
-    .card-sub { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
-    .card-stats { font-family:'Fredoka One',cursive; font-size:17px; color:#444; margin-bottom:20px; line-height:1.9; }
-    .play-btn { font-family:'Fredoka One',cursive; font-size:19px; color:#333; background:var(--yellow); border:3px solid #333; border-radius:999px; padding:13px 44px; cursor:pointer; box-shadow:4px 4px 0 #333; transition:transform .1s,box-shadow .1s; pointer-events:all; }
+    .card { background:var(--white); border:4px solid #333; border-radius:26px; padding:clamp(18px,4vw,28px) clamp(20px,5vw,36px); text-align:center; box-shadow:6px 6px 0 #333; max-width:400px; width:90%; }
+    .card-img { width:clamp(80px,20vw,120px); height:clamp(80px,20vw,120px); object-fit:contain; display:block; margin:0 auto 12px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.2)); }
+    .card-title { font-family:'Fredoka One',cursive; font-size:clamp(24px,6vw,34px); color:var(--blue); -webkit-text-stroke:1.5px #333; line-height:1.1; margin-bottom:6px; }
+    .card-sub { font-size:clamp(12px,2.5vw,14px); color:#666; margin-bottom:16px; line-height:1.5; }
+    .card-stats { font-family:'Fredoka One',cursive; font-size:clamp(14px,3vw,17px); color:#444; margin-bottom:16px; line-height:1.9; }
+    .play-btn { font-family:'Fredoka One',cursive; font-size:clamp(16px,3.5vw,19px); color:#333; background:var(--yellow); border:3px solid #333; border-radius:999px; padding:12px 36px; cursor:pointer; box-shadow:4px 4px 0 #333; transition:transform .1s,box-shadow .1s; pointer-events:all; }
     .play-btn:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 #333; }
     .play-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #333; }
-    #loading { position:fixed; inset:0; background:#4ab8e8; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:30; font-family:'Fredoka One',cursive; color:#333; font-size:18px; }
+    #loading { position:fixed; inset:0; background:#4ab8e8; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:30; font-family:'Fredoka One',cursive; color:#333; font-size:clamp(15px,3.5vw,18px); }
     #loading.hidden { display:none; }
-    .lpup { width:130px; height:130px; object-fit:contain; animation:pup .55s infinite alternate; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.25)); }
+    .lpup { width:clamp(90px,20vw,130px); height:clamp(90px,20vw,130px); object-fit:contain; animation:pup .55s infinite alternate; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.25)); }
     @keyframes pup { from{transform:translateY(0)} to{transform:translateY(-14px)} }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
   <a id="back-btn" href="./index.html">🏡 Home</a>
+
+  <!-- Virtual joystick (touch only) -->
+  <div id="joystick-zone">
+    <div id="joystick-outer">
+      <div id="joystick-inner"></div>
+    </div>
+  </div>
 
   <div id="loading">
     <img class="lpup" src="./bluey.png" alt="Bluey">
@@ -198,6 +215,46 @@
     document.addEventListener('keydown',e=>{keys[e.code]=true;e.preventDefault();});
     document.addEventListener('keyup',e=>keys[e.code]=false);
 
+    // ── Virtual Joystick ──────────────────────────────────────────────────────
+    const joystickOuter = document.getElementById('joystick-outer');
+    const joystickInner = document.getElementById('joystick-inner');
+    const JMAX = 40; // max drag radius in px
+    const joy = { active:false, id:null, startX:0, startY:0, dx:0, dz:0 };
+
+    joystickOuter.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      joy.active = true; joy.id = t.identifier;
+      joy.startX = t.clientX; joy.startY = t.clientY;
+      joy.dx = 0; joy.dz = 0;
+    }, { passive:false });
+
+    document.addEventListener('touchmove', e => {
+      if (!joy.active) return;
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier !== joy.id) continue;
+        const ox = t.clientX - joy.startX;
+        const oy = t.clientY - joy.startY;
+        const dist = Math.hypot(ox, oy);
+        const clamped = Math.min(dist, JMAX);
+        const angle = Math.atan2(oy, ox);
+        joy.dx = Math.cos(angle) * (clamped / JMAX);
+        joy.dz = Math.sin(angle) * (clamped / JMAX);
+        // Move inner dot visually
+        joystickInner.style.transform = `translate(${Math.cos(angle)*clamped}px, ${Math.sin(angle)*clamped}px)`;
+      }
+    }, { passive:false });
+
+    document.addEventListener('touchend', e => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === joy.id) {
+          joy.active = false; joy.dx = 0; joy.dz = 0;
+          joystickInner.style.transform = 'translate(0,0)';
+        }
+      }
+    });
+
     let score=0,collected=0,timeLeft=60,gameRunning=false,timerInterval=null,lastTime=0;
     const scoreEl=document.getElementById('score-val'),collectEl=document.getElementById('collect-val'),timerEl=document.getElementById('timer-val'),timerPill=document.getElementById('timer-pill'),popup=document.getElementById('popup'),screen=document.getElementById('screen');
 
@@ -209,7 +266,7 @@
 
     function endGame(won){gameRunning=false;clearInterval(timerInterval);timerPill.classList.remove('urgent');if(!won&&player.blastAction){player.blasting=true;player.blastAction.reset().play();}document.getElementById('s-title').textContent=won?"That's Fancy!":"Oh No! Time's Up!";document.getElementById('s-sub').textContent=won?'You got all the biscuits! Well done! 🐾':"Bandit ate the rest! Try again!";const stats=document.getElementById('s-stats');stats.style.display='block';stats.innerHTML=`🍪 Biscuits: ${collected}/${TOTAL}<br>⭐ Score: ${score}`;document.getElementById('play-btn').textContent='Play Again! 🐾';screen.classList.remove('hidden');}
 
-    function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-lastTime)/1000,0.05);lastTime=now;if(player.mixer&&player.blasting)player.mixer.update(dt);if(gameRunning&&player.group){let dx=0,dz=0;if(keys['KeyW']||keys['ArrowUp'])dz-=1;if(keys['KeyS']||keys['ArrowDown'])dz+=1;if(keys['KeyA']||keys['ArrowLeft'])dx-=1;if(keys['KeyD']||keys['ArrowRight'])dx+=1;const moving=dx!==0||dz!==0;if(moving){const len=Math.hypot(dx,dz);dx/=len;dz/=len;const nx=Math.max(-BOUND+0.6,Math.min(BOUND-0.6,player.x+dx*player.speed*dt));const nz=Math.max(-BOUND+0.6,Math.min(BOUND-0.6,player.z+dz*player.speed*dt));if(!obstacles.some(o=>Math.hypot(nx-o.x,nz-o.z)<o.r+player.radius)){player.x=nx;player.z=nz;}player.facing=Math.atan2(dx,dz);}const bobY=moving?Math.sin(now*0.013)*0.055:Math.sin(now*0.004)*0.02;player.group.position.set(player.x,bobY,player.z);player.group.rotation.y=player.facing;playerSpot.position.set(player.x,7,player.z);playerSpot.target.position.set(player.x,0,player.z);playerSpot.target.updateMatrixWorld();const t=now/1000;for(const b of biscuits){if(b.collected)continue;b.mesh.rotation.y=t*1.8+b.phase;b.mesh.position.y=0.45+Math.sin(t*2.5+b.phase)*0.1;if(Math.hypot(player.x-b.x,player.z-b.z)<1.0){b.collected=true;biscuitGroup.remove(b.mesh);spawnParticles(b.x,b.z);score+=10;collected++;updateHUD();showPopup();if(collected>=TOTAL)endGame(true);}}camera.position.x+=(player.x*0.3-camera.position.x)*0.07;camera.position.z+=(player.z*0.3+18-camera.position.z)*0.07;camera.position.y+=(14-camera.position.y)*0.05;camera.lookAt(player.x,0.8,player.z);}for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life-=dt*1.6;if(p.life<=0){scene.remove(p.mesh);particles.splice(i,1);continue;}p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;p.vy-=9.8*dt;p.mesh.material.opacity=p.life;}renderer.render(scene,camera);}
+    function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-lastTime)/1000,0.05);lastTime=now;if(player.mixer&&player.blasting)player.mixer.update(dt);if(gameRunning&&player.group){let dx=0,dz=0;if(keys['KeyW']||keys['ArrowUp'])dz-=1;if(keys['KeyS']||keys['ArrowDown'])dz+=1;if(keys['KeyA']||keys['ArrowLeft'])dx-=1;if(keys['KeyD']||keys['ArrowRight'])dx+=1;if(joy.active){dx+=joy.dx;dz+=joy.dz;}const moving=Math.hypot(dx,dz)>0.1;if(moving){const len=Math.hypot(dx,dz);dx/=len;dz/=len;const nx=Math.max(-BOUND+0.6,Math.min(BOUND-0.6,player.x+dx*player.speed*dt));const nz=Math.max(-BOUND+0.6,Math.min(BOUND-0.6,player.z+dz*player.speed*dt));if(!obstacles.some(o=>Math.hypot(nx-o.x,nz-o.z)<o.r+player.radius)){player.x=nx;player.z=nz;}player.facing=Math.atan2(dx,dz);}const bobY=moving?Math.sin(now*0.013)*0.055:Math.sin(now*0.004)*0.02;player.group.position.set(player.x,bobY,player.z);player.group.rotation.y=player.facing;playerSpot.position.set(player.x,7,player.z);playerSpot.target.position.set(player.x,0,player.z);playerSpot.target.updateMatrixWorld();const t=now/1000;for(const b of biscuits){if(b.collected)continue;b.mesh.rotation.y=t*1.8+b.phase;b.mesh.position.y=0.45+Math.sin(t*2.5+b.phase)*0.1;if(Math.hypot(player.x-b.x,player.z-b.z)<1.0){b.collected=true;biscuitGroup.remove(b.mesh);spawnParticles(b.x,b.z);score+=10;collected++;updateHUD();showPopup();if(collected>=TOTAL)endGame(true);}}camera.position.x+=(player.x*0.3-camera.position.x)*0.07;camera.position.z+=(player.z*0.3+18-camera.position.z)*0.07;camera.position.y+=(14-camera.position.y)*0.05;camera.lookAt(player.x,0.8,player.z);}for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life-=dt*1.6;if(p.life<=0){scene.remove(p.mesh);particles.splice(i,1);continue;}p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;p.vy-=9.8*dt;p.mesh.material.opacity=p.life;}renderer.render(scene,camera);}
     animate(0);
   </script>
 </body>
