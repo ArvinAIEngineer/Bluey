@@ -131,34 +131,18 @@
   .card:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 #2a4a6b; }
 
   .card-avatar {
-    width: 160px; height: 160px;
-    display: block; margin: 0 auto 16px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1a3a5c, #0d2240);
+    width: 150px; height: 150px;
     object-fit: contain;
-    padding: 8px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.35), inset 0 2px 4px rgba(255,255,255,0.1);
-    border: 3px solid rgba(255,255,255,0.2);
+    display: block; margin: 0 auto 16px;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.2));
     animation: avatar-bob 2.5s ease-in-out infinite;
     transform-origin: bottom center;
-  }
-  .card-bingo .card-avatar {
-    background: linear-gradient(135deg, #3d1a00, #5c2a00);
   }
   .card:nth-child(2) .card-avatar { animation-delay: 0.4s; }
   @keyframes avatar-bob {
     0%,100%{transform:translateY(0) rotate(0deg)}
     33%{transform:translateY(-8px) rotate(-2deg)}
     66%{transform:translateY(-4px) rotate(2deg)}
-  }
-  .avatar-placeholder {
-    width: 160px; height: 160px;
-    display: block; margin: 0 auto 16px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1a3a5c, #0d2240);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 60px;
-    animation: avatar-bob 2.5s ease-in-out infinite;
   }
 
   .card-name {
@@ -264,24 +248,22 @@
 
 <div class="cards">
   <a class="card card-bluey" href="./bluey.html">
-    <img class="card-avatar" id="avatar-bluey" src="" alt="Bluey">
+    <img class="card-avatar" src="./bluey.png" alt="Bluey">
     <div class="card-name">Bluey</div>
     <div class="card-game">🍪 Biscuit Run</div>
     <div class="card-pill">Play! →</div>
   </a>
 
   <a class="card card-bingo" href="./bingo.html">
-    <img class="card-avatar" id="avatar-bingo" src="" alt="Bingo" style="animation-delay:0.4s">
+    <img class="card-avatar" src="./bingo.png" alt="Bingo" style="animation-delay:0.4s">
     <div class="card-name">Bingo</div>
     <div class="card-game">🌸 Flower Hunt</div>
     <div class="card-pill">Play! →</div>
   </a>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-  // ── Sprinkle stars ──
+  // Sprinkle stars
   const starsEl = document.getElementById('stars');
   for (let i = 0; i < 30; i++) {
     const s = document.createElement('div');
@@ -292,99 +274,6 @@
     s.style.width = s.style.height = (4 + Math.random()*6) + 'px';
     starsEl.appendChild(s);
   }
-
-  // ── Render a GLB to a PNG dataURL ──
-  function renderGLBtoImage(url, callback) {
-    const SIZE = 320;
-
-    // Hidden offscreen canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = SIZE; canvas.height = SIZE;
-
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setSize(SIZE, SIZE);
-    renderer.setClearColor(0x000000, 0); // transparent bg
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.shadowMap.enabled = true;
-
-    const scene = new THREE.Scene();
-
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 100);
-    camera.position.set(0, 1.2, 4.5);
-    camera.lookAt(0, 0.8, 0);
-
-    // Lighting — bright so character pops
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-    const key = new THREE.DirectionalLight(0xffffff, 2.0);
-    key.position.set(2, 4, 3); scene.add(key);
-    const rim = new THREE.DirectionalLight(0xaaddff, 0.8);
-    rim.position.set(-2, 2, -2); scene.add(rim);
-    const bot = new THREE.DirectionalLight(0xffeedd, 0.4);
-    bot.position.set(0, -2, 1); scene.add(bot);
-
-    new THREE.GLTFLoader().load(url, gltf => {
-      const model = gltf.scene;
-
-      // Fit model
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      model.scale.setScalar(2.0 / maxDim);
-
-      const box2 = new THREE.Box3().setFromObject(model);
-      const center2 = box2.getCenter(new THREE.Vector3());
-      model.position.sub(center2);
-      model.position.y += box2.getSize(new THREE.Vector3()).y * 0.05; // slight lift
-
-      // Slight angle so it looks like a character card
-      model.rotation.y = -Math.PI * 0.12;
-
-      scene.add(model);
-
-      // Render a few frames so textures load
-      let frames = 0;
-      function renderFrame() {
-        frames++;
-        renderer.render(scene, camera);
-        if (frames < 8) {
-          requestAnimationFrame(renderFrame);
-        } else {
-          // Capture
-          const dataURL = canvas.toDataURL('image/png');
-          callback(dataURL);
-          renderer.dispose();
-        }
-      }
-      renderFrame();
-
-    }, undefined, err => {
-      console.warn('GLB render failed:', url, err);
-      callback(null);
-    });
-  }
-
-  // Render Bluey
-  renderGLBtoImage('./BlueyMinifig.glb', dataURL => {
-    const img = document.getElementById('avatar-bluey');
-    if (dataURL) {
-      img.src = dataURL;
-    } else {
-      img.style.fontSize = '80px';
-      img.style.background = 'none';
-      img.outerHTML = '<span class="card-avatar" style="font-size:80px;display:flex;align-items:center;justify-content:center">🐕</span>';
-    }
-  });
-
-  // Render Bingo
-  renderGLBtoImage('./bingo.glb', dataURL => {
-    const img = document.getElementById('avatar-bingo');
-    if (dataURL) {
-      img.src = dataURL;
-    } else {
-      img.outerHTML = '<span class="card-avatar" style="font-size:80px;display:flex;align-items:center;justify-content:center">🦊</span>';
-    }
-  });
 </script>
 </body>
 </html>
