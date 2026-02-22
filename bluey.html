@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bluey's Biscuit Run!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800&display=swap');
+  :root { --blue:#4db8f0; --yellow:#FFD93D; --white:#FFFEF5; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { overflow:hidden; font-family:'Nunito',sans-serif; background:#87CEEB; }
+  #canvas { position:fixed; top:0; left:0; display:block; }
+
+  #ui { position:fixed; inset:0; pointer-events:none; z-index:10; }
+  #hud { position:absolute; top:16px; left:50%; transform:translateX(-50%); display:flex; gap:12px; }
+  .pill { background:var(--white); border:3px solid #333; border-radius:999px; padding:6px 18px; display:flex; align-items:center; gap:8px; box-shadow:3px 3px 0 #333; }
+  .pill-icon { font-size:18px; }
+  .pill-val { font-family:'Fredoka One',cursive; font-size:22px; color:#333; min-width:28px; text-align:center; }
+  #timer-pill .pill-val { color:#e05c2a; }
+  #timer-pill.urgent { animation:tshake .25s infinite; }
+  @keyframes tshake { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+
+  #popup { position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); font-family:'Fredoka One',cursive; font-size:34px; color:var(--yellow); -webkit-text-stroke:2px #333; opacity:0; pointer-events:none; white-space:nowrap; }
+  .pop-go { animation:popUp .75s ease-out forwards; }
+  @keyframes popUp { 0%{opacity:1;transform:translate(-50%,-50%) scale(.8)} 50%{opacity:1;transform:translate(-50%,-100%) scale(1.25)} 100%{opacity:0;transform:translate(-50%,-160%) scale(.9)} }
+
+  #ctrl { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:5px; opacity:.5; }
+  .crow { display:flex; gap:5px; }
+  .key { background:var(--white); border:2px solid #555; border-radius:6px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-family:'Fredoka One',cursive; font-size:12px; color:#333; box-shadow:2px 2px 0 #555; }
+
+  #screen { position:absolute; inset:0; background:rgba(77,184,240,.88); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; pointer-events:all; transition:opacity .3s; }
+  #screen.hidden { opacity:0; pointer-events:none; }
+  .card { background:var(--white); border:4px solid #333; border-radius:26px; padding:28px 36px; text-align:center; box-shadow:6px 6px 0 #333; max-width:400px; width:90%; }
+  .card-emoji { font-size:58px; margin-bottom:8px; display:block; }
+  .card-title { font-family:'Fredoka One',cursive; font-size:34px; color:var(--blue); -webkit-text-stroke:1.5px #333; line-height:1.1; margin-bottom:6px; }
+  .card-sub { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
+  .card-stats { font-family:'Fredoka One',cursive; font-size:17px; color:#444; margin-bottom:20px; line-height:1.9; }
+  .play-btn { font-family:'Fredoka One',cursive; font-size:19px; color:#333; background:var(--yellow); border:3px solid #333; border-radius:999px; padding:13px 44px; cursor:pointer; box-shadow:4px 4px 0 #333; transition:transform .1s,box-shadow .1s; pointer-events:all; }
+  .play-btn:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 #333; }
+  .play-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #333; }
+
+  #loading { position:fixed; inset:0; background:#87CEEB; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; z-index:30; font-family:'Fredoka One',cursive; color:#333; font-size:18px; }
+  #loading.hidden { display:none; }
+  .lpup { font-size:52px; animation:pup .55s infinite alternate; }
+  @keyframes pup { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<a id="back-btn" href="./index.html">🏡 Home</a>
+
+<div id="loading">
+  <div class="lpup">🐕</div>
+  <div>Setting up the backyard...</div>
+</div>
+
+<div id="ui">
+  <div id="hud">
+    <div class="pill"><span class="pill-icon">🍪</span><span class="pill-val" id="score-val">0</span></div>
+    <div class="pill"><span class="pill-icon">🐾</span><span class="pill-val" id="collect-val">0/12</span></div>
+    <div class="pill" id="timer-pill"><span class="pill-icon">⏰</span><span class="pill-val" id="timer-val">60</span></div>
+  </div>
+  <div id="popup">Wackadoo!</div>
+  <div id="ctrl">
+    <div class="crow"><div class="key">W</div></div>
+    <div class="crow"><div class="key">A</div><div class="key">S</div><div class="key">D</div></div>
+  </div>
+</div>
+
+<div id="screen">
+  <div class="card">
+    <span class="card-emoji" id="s-emoji">🐕</span>
+    <div class="card-title" id="s-title">Bluey's<br>Biscuit Run!</div>
+    <div class="card-sub" id="s-sub">Run around the backyard and collect all the biscuits before time runs out! 🍪</div>
+    <div class="card-stats" id="s-stats" style="display:none"></div>
+    <button class="play-btn" id="play-btn" onclick="startGame()">Let's Play! 🎉</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+// ─── RENDERER ────────────────────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x4ab8e8);
+scene.fog = new THREE.FogExp2(0x4ab8e8, 0.018);
+
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth/window.innerHeight, 0.1, 300);
+camera.position.set(0, 14, 18);
+camera.lookAt(0, 0, 0);
+
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+// ─── LIGHTING ─────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const sun = new THREE.DirectionalLight(0xfff5cc, 1.6);
+sun.position.set(12, 25, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 100;
+sun.shadow.camera.left = sun.shadow.camera.bottom = -30;
+sun.shadow.camera.right = sun.shadow.camera.top = 30;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x88bbff, 0.25);
+fill.position.set(-8, 6, -5);
+scene.add(fill);
+
+// ─── MATERIALS (reusable) ────────────────────────────────────────────────────
+const M = {
+  grass:    new THREE.MeshStandardMaterial({ color: 0x268a18, roughness: 0.9 }),
+  grassDark:new THREE.MeshStandardMaterial({ color: 0x145c0a, roughness: 0.9 }),
+  fence:    new THREE.MeshStandardMaterial({ color: 0xa0622a, roughness: 0.8 }),
+  fenceRail:new THREE.MeshStandardMaterial({ color: 0x7a4a1a, roughness: 0.8 }),
+  house:    new THREE.MeshStandardMaterial({ color: 0xe8a820, roughness: 0.7 }),
+  roof:     new THREE.MeshStandardMaterial({ color: 0xcc2211, roughness: 0.7 }),
+  door:     new THREE.MeshStandardMaterial({ color: 0x5a3010, roughness: 0.7 }),
+  window:   new THREE.MeshStandardMaterial({ color: 0x44aaee, roughness: 0.2, metalness: 0.2 }),
+  trampoline: new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 }),
+  trampolineLegs: new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.6 }),
+  trampolineMat: new THREE.MeshStandardMaterial({ color: 0x1133bb, roughness: 0.9 }),
+  clothesline: new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.6 }),
+  wood:     new THREE.MeshStandardMaterial({ color: 0x7a4820, roughness: 0.9 }),
+  treeTrunk:new THREE.MeshStandardMaterial({ color: 0x5a3a18, roughness: 1.0 }),
+  treeLeaf: new THREE.MeshStandardMaterial({ color: 0x1a8a1a, roughness: 0.9 }),
+  treeLeaf2:new THREE.MeshStandardMaterial({ color: 0x0e6e0e, roughness: 0.9 }),
+  path:     new THREE.MeshStandardMaterial({ color: 0xd4d4d4, roughness: 0.95 }),
+  flower1:  new THREE.MeshStandardMaterial({ color: 0xee1177, roughness: 0.7 }),
+  flower2:  new THREE.MeshStandardMaterial({ color: 0xffaa00, roughness: 0.7 }),
+  flowerStem:new THREE.MeshStandardMaterial({ color: 0x116611, roughness: 0.9 }),
+};
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const BOUND = 18; // half-size of playable area
+const obstacles = []; // { x, z, r } for collision
+
+function addObstacle(x, z, r) { obstacles.push({ x, z, r }); }
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function box(w, h, d, mat, x, y, z, rx=0, ry=0) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  m.rotation.set(rx, ry, 0);
+  m.castShadow = true; m.receiveShadow = true;
+  scene.add(m); return m;
+}
+function cyl(rt, rb, h, seg, mat, x, y, z, rx=0, ry=0) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.position.set(x, y, z);
+  m.rotation.set(rx, ry, 0);
+  m.castShadow = true; m.receiveShadow = true;
+  scene.add(m); return m;
+}
+function sphere(r, mat, x, y, z) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  scene.add(m); return m;
+}
+
+// ─── GROUND ──────────────────────────────────────────────────────────────────
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(BOUND*2+8, BOUND*2+8, 20, 20), M.grass);
+ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Grass texture variation patches
+for (let i = 0; i < 18; i++) {
+  const px = (Math.random()-0.5)*(BOUND*2);
+  const pz = (Math.random()-0.5)*(BOUND*2);
+  const pr = 1.5 + Math.random()*2.5;
+  const patch = new THREE.Mesh(new THREE.CircleGeometry(pr, 7), M.grassDark);
+  patch.rotation.x = -Math.PI/2;
+  patch.position.set(px, 0.005, pz);
+  scene.add(patch);
+}
+
+// ─── FENCE ───────────────────────────────────────────────────────────────────
+function fenceSegment(x1, z1, x2, z2) {
+  const dx = x2-x1, dz = z2-z1;
+  const len = Math.hypot(dx, dz);
+  const ang = Math.atan2(dx, dz);
+  const posts = Math.ceil(len / 2.2);
+  for (let i = 0; i <= posts; i++) {
+    const t = i/posts;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 0.2), M.fence);
+    m.position.set(x1+dx*t, 0.75, z1+dz*t);
+    m.castShadow = true; scene.add(m);
+  }
+  [0.45, 0.95].forEach(h => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, len+0.1), M.fenceRail);
+    rail.position.set((x1+x2)/2, h, (z1+z2)/2);
+    rail.rotation.y = ang;
+    scene.add(rail);
+  });
+}
+const F = BOUND + 1;
+fenceSegment(-F, -F,  F, -F);
+fenceSegment( F, -F,  F,  F);
+fenceSegment( F,  F, -F,  F);
+fenceSegment(-F,  F, -F, -F);
+
+// ─── HEELER HOUSE (back-left) ─────────────────────────────────────────────────
+{
+  const hx = -12, hz = -13;
+  // Walls
+  box(9, 4, 6, M.house, hx, 2, hz);
+  // Roof
+  const roofGeo = new THREE.ConeGeometry(6.5, 3, 4);
+  const roofM = new THREE.Mesh(roofGeo, M.roof);
+  roofM.position.set(hx, 5.5, hz);
+  roofM.rotation.y = Math.PI/4;
+  roofM.castShadow = true; scene.add(roofM);
+  // Door
+  box(1.0, 2.0, 0.15, M.door, hx, 1.0, hz+3.05);
+  // Windows
+  box(1.2, 0.9, 0.12, M.window, hx-2.2, 2.2, hz+3.05);
+  box(1.2, 0.9, 0.12, M.window, hx+2.2, 2.2, hz+3.05);
+  // Porch step
+  box(3, 0.2, 1, M.path, hx, 0.1, hz+3.5);
+  addObstacle(hx, hz, 5.5);
+}
+
+// ─── HILLS CLOTHESLINE (iconic!) ─────────────────────────────────────────────
+{
+  const clx = 8, clz = -10;
+  // Center pole
+  cyl(0.08, 0.08, 4.5, 8, M.clothesline, clx, 2.25, clz);
+  // Rotating top disc
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 0.1, 20), M.clothesline);
+  disc.position.set(clx, 4.5, clz);
+  scene.add(disc);
+  // Arms
+  for (let i = 0; i < 6; i++) {
+    const a = (i/6)*Math.PI*2;
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.8, 6), M.clothesline);
+    arm.rotation.z = Math.PI/2;
+    arm.position.set(clx + Math.cos(a)*1.4, 4.5, clz + Math.sin(a)*1.4);
+    arm.rotation.y = a;
+    scene.add(arm);
+    // Hanging lines
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.2, 4), M.clothesline);
+    wire.position.set(clx + Math.cos(a)*2.5, 4.0, clz + Math.sin(a)*2.5);
+    scene.add(wire);
+  }
+  // Ground anchor
+  cyl(0.3, 0.4, 0.3, 8, M.wood, clx, 0.15, clz);
+  addObstacle(clx, clz, 3.2);
+}
+
+// ─── TRAMPOLINE ───────────────────────────────────────────────────────────────
+{
+  const tx = 9, tz = 8;
+  const tramR = 2.8;
+  // Frame ring
+  const frameTube = new THREE.Mesh(
+    new THREE.TorusGeometry(tramR, 0.18, 8, 40),
+    M.trampolineLegs
+  );
+  frameTube.position.set(tx, 1.6, tz);
+  frameTube.rotation.x = Math.PI/2;
+  frameTube.castShadow = true;
+  scene.add(frameTube);
+  // Jumping mat
+  const mat = new THREE.Mesh(new THREE.CircleGeometry(tramR-0.2, 32), M.trampolineMat);
+  mat.position.set(tx, 1.62, tz);
+  mat.rotation.x = -Math.PI/2;
+  scene.add(mat);
+  // Legs
+  for (let i = 0; i < 6; i++) {
+    const a = (i/6)*Math.PI*2;
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 1.6, 6), M.trampolineLegs);
+    leg.position.set(tx + Math.cos(a)*tramR*0.9, 0.8, tz + Math.sin(a)*tramR*0.9);
+    leg.castShadow = true; scene.add(leg);
+  }
+  // Safety net poles
+  for (let i = 0; i < 6; i++) {
+    const a = (i/6)*Math.PI*2;
+    cyl(0.05, 0.05, 1.8, 6, M.trampolineLegs,
+      tx + Math.cos(a)*(tramR+0.1), 2.5, tz + Math.sin(a)*(tramR+0.1));
+  }
+  addObstacle(tx, tz, tramR + 0.5);
+}
+
+// ─── TREES ────────────────────────────────────────────────────────────────────
+function tree(x, z, sc=1) {
+  cyl(0.22*sc, 0.3*sc, 2.0*sc, 7, M.treeTrunk, x, 1.0*sc, z);
+  sphere(1.5*sc, M.treeLeaf,  x, 3.2*sc, z);
+  sphere(1.1*sc, M.treeLeaf2, x+0.4*sc, 4.2*sc, z+0.2*sc);
+  sphere(0.9*sc, M.treeLeaf,  x-0.3*sc, 4.6*sc, z-0.3*sc);
+  addObstacle(x, z, 1.0*sc);
+}
+tree(-6, -14, 0.85);
+tree( 4, -16, 0.95);
+tree(14, -12, 0.9);
+tree(15,   4, 1.0);
+tree(14,  14, 0.85);
+tree(-3,  15, 0.9);
+tree(-13,  12, 0.95);
+tree(-16,  2, 0.85);
+
+// ─── GARDEN BED (flowers) ─────────────────────────────────────────────────────
+{
+  // Garden border along back fence
+  const gardenMat = new THREE.MeshStandardMaterial({ color: 0x8B6340, roughness: 1.0 });
+  const gd = new THREE.Mesh(new THREE.BoxGeometry(10, 0.2, 2), gardenMat);
+  gd.position.set(2, 0.1, -17);
+  gd.receiveShadow = true; scene.add(gd);
+
+  const positions = [[-3,-16.5],[-1,-16.5],[1,-16.5],[3,-16.5],[5,-16.5],[-2,-15.5],[0,-15.5],[2,-15.5],[4,-15.5]];
+  positions.forEach(([fx, fz], i) => {
+    const stemH = 0.6 + Math.random()*0.4;
+    cyl(0.04, 0.04, stemH, 5, M.flowerStem, fx, stemH/2, fz);
+    const flMat = i % 2 === 0 ? M.flower1 : M.flower2;
+    sphere(0.22 + Math.random()*0.1, flMat, fx, stemH + 0.2, fz);
+  });
+}
+
+// ─── SANDPIT ─────────────────────────────────────────────────────────────────
+{
+  const sandMat = new THREE.MeshStandardMaterial({ color: 0xe8c97a, roughness: 1.0 });
+  const sand = new THREE.Mesh(new THREE.CircleGeometry(2.2, 20), sandMat);
+  sand.rotation.x = -Math.PI/2;
+  sand.position.set(-10, 0.03, 8);
+  scene.add(sand);
+  // Wooden border
+  for (let i = 0; i < 8; i++) {
+    const a = (i/8)*Math.PI*2;
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 0.25), M.wood);
+    plank.position.set(-10 + Math.cos(a)*2.2, 0.15, 8 + Math.sin(a)*2.2);
+    plank.rotation.y = a + Math.PI/2;
+    scene.add(plank);
+  }
+  // Toy bucket
+  cyl(0.22, 0.18, 0.35, 8, new THREE.MeshStandardMaterial({color:0xff5555}), -9.5, 0.2, 8.5);
+  // Toy shovel handle
+  cyl(0.04, 0.04, 0.8, 6, new THREE.MeshStandardMaterial({color:0x55aaff}), -10.5, 0.4, 7.8, 0.3);
+  addObstacle(-10, 8, 2.6);
+}
+
+// ─── KENNEL ──────────────────────────────────────────────────────────────────
+{
+  const kx = 5, kz = -14;
+  box(2.2, 1.8, 2.0, M.wood, kx, 0.9, kz);
+  // Roof
+  const kRoof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.0, 4), M.roof);
+  kRoof.position.set(kx, 2.3, kz);
+  kRoof.rotation.y = Math.PI/4;
+  kRoof.castShadow = true; scene.add(kRoof);
+  // Door hole
+  const kDoor = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.1, 16), new THREE.MeshStandardMaterial({color:0x222222}));
+  kDoor.rotation.x = Math.PI/2;
+  kDoor.position.set(kx, 0.7, kz+1.02);
+  scene.add(kDoor);
+  addObstacle(kx, kz, 1.5);
+}
+
+// ─── STEPPING STONES PATH ─────────────────────────────────────────────────────
+{
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xbbbbaa, roughness: 0.95 });
+  [[-9,0.02,3],[-9,0.02,1],[-9,0.02,-1],[-9,0.02,-3],[-10,0.02,-5],[-11,0.02,-7],[-11.5,0.02,-9]].forEach(([x,y,z]) => {
+    const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.5+Math.random()*0.2, 0.5+Math.random()*0.2, 0.1, 7), stoneMat);
+    stone.position.set(x, y, z);
+    stone.rotation.y = Math.random();
+    stone.receiveShadow = true;
+    scene.add(stone);
+  });
+}
+
+// ─── BALLS/TOYS SCATTERED ─────────────────────────────────────────────────────
+const ballColors = [0xff4444, 0x4444ff, 0x44ff44, 0xffaa00];
+[[2,0.25,5],[4,0.25,3],[-5,0.25,5],[1,0.25,-6]].forEach(([x,y,z],i) => {
+  sphere(0.25, new THREE.MeshStandardMaterial({color:ballColors[i], roughness:0.5}), x, y, z);
+});
+
+// ─── CLOUDS (decorative) ──────────────────────────────────────────────────────
+const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1.0 });
+function cloud(x, y, z, sc=1) {
+  [[0,0,0,1.0],[0.9,0.3,0,0.8],[-0.8,0.2,0,0.75],[0,0.5,0,0.7],[0.4,0.6,0.3,0.55]].forEach(([dx,dy,dz,r]) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r*sc, 8, 6), cloudMat);
+    m.position.set(x+dx*sc, y+dy*sc, z+dz*sc);
+    scene.add(m);
+  });
+}
+cloud(-8, 18, -15, 1.2);
+cloud( 6, 20, -18, 1.0);
+cloud(12, 17, -10, 0.9);
+cloud(-14, 19, 5, 1.1);
+cloud( 3, 21, 10, 0.8);
+
+// ─── BISCUITS ────────────────────────────────────────────────────────────────
+const TOTAL = 12;
+const biscuitGroup = new THREE.Group();
+scene.add(biscuitGroup);
+const biscuits = [];
+const bMat  = new THREE.MeshStandardMaterial({ color: 0xD4A96A, roughness: 0.7 });
+const iMat  = new THREE.MeshStandardMaterial({ color: 0xFFB6C1, emissive: 0xff9999, emissiveIntensity: 0.3, roughness: 0.5 });
+
+function spawnBiscuits() {
+  biscuits.forEach(b => biscuitGroup.remove(b.mesh));
+  biscuits.length = 0;
+  for (let i = 0; i < TOTAL; i++) {
+    let bx, bz, bad, tries = 0;
+    do {
+      bx = (Math.random()-.5)*(BOUND*2 - 4);
+      bz = (Math.random()-.5)*(BOUND*2 - 4);
+      bad = Math.hypot(bx-player.x, bz-player.z) < 3
+         || obstacles.some(o => Math.hypot(bx-o.x, bz-o.z) < o.r + 1.5);
+      tries++;
+    } while (bad && tries < 100);
+
+    const g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.13, 12), bMat);
+    base.castShadow = true; g.add(base);
+    const icing = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), iMat);
+    icing.position.y = 0.12; g.add(icing);
+    const gl = new THREE.PointLight(0xffcc88, 0.8, 2.5);
+    gl.position.y = 0.4; g.add(gl);
+    g.position.set(bx, 0.45, bz);
+    biscuitGroup.add(g);
+    biscuits.push({ mesh: g, x: bx, z: bz, collected: false, phase: Math.random()*Math.PI*2 });
+  }
+}
+
+// ─── PARTICLES ────────────────────────────────────────────────────────────────
+const particles = [];
+const pCols = [0xFFD93D, 0xFF8C42, 0xff6b9d, 0x4db8f0, 0x6ecf6e];
+function spawnParticles(x, z) {
+  for (let i = 0; i < 14; i++) {
+    const col = pCols[Math.floor(Math.random()*pCols.length)];
+    const m = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07+Math.random()*0.09, 6, 6),
+      new THREE.MeshStandardMaterial({ color:col, emissive:col, emissiveIntensity:0.9, transparent:true })
+    );
+    m.position.set(x, 0.45, z);
+    const a = Math.random()*Math.PI*2, sp = 3+Math.random()*5;
+    scene.add(m);
+    particles.push({ mesh:m, vx:Math.cos(a)*sp, vy:4+Math.random()*5, vz:Math.sin(a)*sp, life:1.0 });
+  }
+}
+
+// ─── PLAYER ──────────────────────────────────────────────────────────────────
+const player = { group:null, mixer:null, blastAction:null, x:0, z:0, speed:6, radius:0.5, facing:0, blasting:false };
+
+// ─── LOAD BLUEY ───────────────────────────────────────────────────────────────
+new THREE.GLTFLoader().load('./BlueyMinifig.glb', gltf => {
+  const model = gltf.scene;
+
+  // Scale to 1.8 units tall
+  const box = new THREE.Box3().setFromObject(model);
+  const h = box.getSize(new THREE.Vector3()).y;
+  model.scale.setScalar(1.8 / h);
+
+  const box2 = new THREE.Box3().setFromObject(model);
+  model.position.y = -box2.min.y; // sit on ground
+
+  model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+
+  const group = new THREE.Group();
+  group.add(model);
+  group.position.set(0, 0, 2); // spawn near center
+  scene.add(group);
+  player.group = group;
+  player.x = 0; player.z = 2;
+
+  // Spotlight to make Bluey stand out
+  const playerSpot = new THREE.SpotLight(0xffffff, 2.5, 8, Math.PI/6, 0.4);
+  playerSpot.position.set(0, 6, 2);
+  playerSpot.castShadow = false;
+  scene.add(playerSpot);
+  scene.add(playerSpot.target);
+
+  // Glow under Bluey
+  const glow = new THREE.PointLight(0x4db8f0, 1.0, 3);
+  glow.position.y = 0.2; group.add(glow);
+
+  // Store blast anim — ONLY fires on game over
+  if (gltf.animations.length > 0) {
+    const mixer = new THREE.AnimationMixer(model);
+    player.mixer = mixer;
+    const action = mixer.clipAction(gltf.animations[0]);
+    action.loop = THREE.LoopOnce;
+    action.clampWhenFinished = true;
+    player.blastAction = action;
+  }
+
+  document.getElementById('loading').classList.add('hidden');
+
+}, undefined, err => {
+  console.error('Bluey load error:', err);
+  // Fallback box character
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.BoxGeometry(0.6,1.0,0.4), new THREE.MeshStandardMaterial({color:0x4db8f0}));
+  b.position.y = 0.5; g.add(b);
+  const hd = new THREE.Mesh(new THREE.SphereGeometry(0.35,8,8), new THREE.MeshStandardMaterial({color:0x3da8e0}));
+  hd.position.y = 1.3; g.add(hd);
+  scene.add(g); player.group = g;
+  document.getElementById('loading').classList.add('hidden');
+});
+
+// ─── INPUT ────────────────────────────────────────────────────────────────────
+const keys = {};
+document.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
+document.addEventListener('keyup',   e => keys[e.code] = false);
+
+// ─── GAME STATE ───────────────────────────────────────────────────────────────
+let score=0, collected=0, timeLeft=60, gameRunning=false, timerInterval=null, lastTime=0;
+
+const scoreEl   = document.getElementById('score-val');
+const collectEl = document.getElementById('collect-val');
+const timerEl   = document.getElementById('timer-val');
+const timerPill = document.getElementById('timer-pill');
+const popup     = document.getElementById('popup');
+const screen    = document.getElementById('screen');
+
+function updateHUD() {
+  scoreEl.textContent   = score;
+  collectEl.textContent = `${collected}/${TOTAL}`;
+  timerEl.textContent   = timeLeft;
+}
+
+const msgs = ['Wackadoo! 🎉',"That's fancy!",'Yum! 🍪','+10!','Woohoo!','Magic! ✨'];
+function showPopup() {
+  popup.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+  popup.classList.remove('pop-go'); void popup.offsetWidth; popup.classList.add('pop-go');
+}
+
+function startGame() {
+  if (!player.group) return;
+  score=0; collected=0; timeLeft=60; gameRunning=true;
+  player.blasting=false; player.x=0; player.z=2;
+  player.group.position.set(0,0,2);
+  if (player.mixer) player.mixer.stopAllAction();
+  spawnBiscuits(); updateHUD();
+  screen.classList.add('hidden');
+  document.getElementById('s-stats').style.display='none';
+  timerPill.classList.remove('urgent');
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (!gameRunning) return;
+    timeLeft--; updateHUD();
+    if (timeLeft<=10) timerPill.classList.add('urgent');
+    if (timeLeft<=0) endGame(false);
+  }, 1000);
+}
+
+function endGame(won) {
+  gameRunning=false; clearInterval(timerInterval); timerPill.classList.remove('urgent');
+  if (!won && player.blastAction) { player.blasting=true; player.blastAction.reset().play(); }
+  document.getElementById('s-emoji').textContent = won ? '🏆' : '😅';
+  document.getElementById('s-title').textContent = won ? "That's Fancy!" : "Oh No! Time's Up!";
+  document.getElementById('s-sub').textContent   = won ? 'You got all the biscuits! Well done! 🐾' : "Bandit ate the rest! Try again!";
+  const stats = document.getElementById('s-stats');
+  stats.style.display='block'; stats.innerHTML=`🍪 Biscuits: ${collected}/${TOTAL}<br>⭐ Score: ${score}`;
+  document.getElementById('play-btn').textContent='Play Again! 🐾';
+  screen.classList.remove('hidden');
+}
+
+// ─── GAME LOOP ────────────────────────────────────────────────────────────────
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((now-lastTime)/1000, 0.05);
+  lastTime = now;
+
+  if (player.mixer && player.blasting) player.mixer.update(dt);
+
+  if (gameRunning && player.group) {
+    // Movement
+    let dx=0, dz=0;
+    if (keys['KeyW']||keys['ArrowUp'])    dz -= 1;
+    if (keys['KeyS']||keys['ArrowDown'])  dz += 1;
+    if (keys['KeyA']||keys['ArrowLeft'])  dx -= 1;
+    if (keys['KeyD']||keys['ArrowRight']) dx += 1;
+    const moving = dx!==0||dz!==0;
+
+    if (moving) {
+      const len = Math.hypot(dx,dz); dx/=len; dz/=len;
+      const nx = Math.max(-BOUND+0.6, Math.min(BOUND-0.6, player.x+dx*player.speed*dt));
+      const nz = Math.max(-BOUND+0.6, Math.min(BOUND-0.6, player.z+dz*player.speed*dt));
+      if (!obstacles.some(o => Math.hypot(nx-o.x, nz-o.z) < o.r+player.radius)) {
+        player.x=nx; player.z=nz;
+      }
+      player.facing = Math.atan2(dx, dz);
+    }
+
+    // Move spotlight to follow Bluey
+    playerSpot.position.set(player.x, 7, player.z);
+    playerSpot.target.position.set(player.x, 0, player.z);
+    playerSpot.target.updateMatrixWorld();
+
+    // Gentle idle/run bob — no skeleton animation
+    const bobY = moving ? Math.sin(now*0.013)*0.055 : Math.sin(now*0.004)*0.02;
+    player.group.position.set(player.x, bobY, player.z);
+    player.group.rotation.y = player.facing;
+
+    // Collect biscuits
+    const t = now/1000;
+    for (const b of biscuits) {
+      if (b.collected) continue;
+      b.mesh.rotation.y = t*1.8+b.phase;
+      b.mesh.position.y = 0.45+Math.sin(t*2.5+b.phase)*0.1;
+      if (Math.hypot(player.x-b.x, player.z-b.z) < 1.0) {
+        b.collected=true; biscuitGroup.remove(b.mesh);
+        spawnParticles(b.x, b.z);
+        score+=10; collected++; updateHUD(); showPopup();
+        if (collected>=TOTAL) endGame(true);
+      }
+    }
+
+    // Camera — smooth follow slightly above and behind
+    camera.position.x += (player.x*0.3 - camera.position.x)*0.07;
+    camera.position.z += (player.z*0.3+18 - camera.position.z)*0.07;
+    camera.position.y += (14 - camera.position.y)*0.05;
+    camera.lookAt(player.x, 0.8, player.z);
+  }
+
+  // Particles
+  for (let i=particles.length-1; i>=0; i--) {
+    const p=particles[i]; p.life-=dt*1.6;
+    if (p.life<=0) { scene.remove(p.mesh); particles.splice(i,1); continue; }
+    p.mesh.position.x+=p.vx*dt; p.mesh.position.y+=p.vy*dt; p.mesh.position.z+=p.vz*dt;
+    p.vy-=9.8*dt; p.mesh.material.opacity=p.life;
+  }
+
+  renderer.render(scene, camera);
+}
+animate(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bluey & Bingo Games!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #5bbfea 0%, #87CEEB 40%, #a8e6ff 100%);
+    font-family: 'Nunito', sans-serif;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── CLOUDS ── */
+  .cloud {
+    position: fixed;
+    background: #fff;
+    border-radius: 999px;
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .cloud::before, .cloud::after {
+    content:''; position:absolute; background:#fff; border-radius:50%;
+  }
+
+  /* ── GRASS STRIP ── */
+  .grass {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 90px;
+    background: linear-gradient(to bottom, #2d8a20, #1a6010);
+    z-index: 0;
+  }
+  .grass::before {
+    content:'';
+    position: absolute; top:-20px; left:0; right:0; height:30px;
+    background: radial-gradient(ellipse 30px 20px at 50% 100%, #2d8a20 50%, transparent 51%);
+    background-size: 40px 30px;
+    background-repeat: repeat-x;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding: 48px 20px 24px;
+  }
+
+  .logo-emoji { font-size: 52px; display: block; margin-bottom: 8px;
+    animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+  h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(40px, 8vw, 72px);
+    color: #fff;
+    -webkit-text-stroke: 3px #2a4a6b;
+    text-shadow: 4px 4px 0 #2a4a6b;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+
+  .tagline {
+    font-size: clamp(14px, 2.5vw, 18px);
+    color: rgba(255,255,255,0.9);
+    font-weight: 700;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  }
+
+  /* ── PICK TEXT ── */
+  .pick-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(22px, 4vw, 32px);
+    color: #fff;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    margin-bottom: 36px;
+    position: relative; z-index: 2;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+  /* ── CARDS ── */
+  .cards {
+    display: flex;
+    gap: clamp(16px, 4vw, 48px);
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0 24px 120px;
+    position: relative; z-index: 2;
+  }
+
+  .card {
+    background: #fff;
+    border: 4px solid #2a4a6b;
+    border-radius: 28px;
+    padding: 36px 32px;
+    width: clamp(240px, 40vw, 320px);
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    box-shadow: 6px 6px 0 #2a4a6b;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content:'';
+    position:absolute; inset:0;
+    border-radius:24px;
+    opacity:0;
+    transition:opacity 0.2s;
+  }
+
+  .card-bluey { background: linear-gradient(160deg, #e8f8ff 0%, #c8eeff 100%); }
+  .card-bluey::before { background: linear-gradient(160deg, #4db8f0 0%, #2a90d0 100%); }
+
+  .card-bingo { background: linear-gradient(160deg, #fff5e8 0%, #ffe0c0 100%); }
+  .card-bingo::before { background: linear-gradient(160deg, #ff8c42 0%, #ee5500 100%); }
+
+  .card:hover { transform: translate(-4px, -4px) rotate(-1deg); box-shadow: 10px 10px 0 #2a4a6b; }
+  .card:hover::before { opacity: 0.08; }
+  .card:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 #2a4a6b; }
+
+  .card-avatar {
+    font-size: 88px;
+    display: block;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+    animation: avatar-bob 2.5s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+  .card:nth-child(2) .card-avatar { animation-delay: 0.4s; }
+  @keyframes avatar-bob {
+    0%,100%{transform:translateY(0) rotate(0deg)}
+    33%{transform:translateY(-8px) rotate(-2deg)}
+    66%{transform:translateY(-4px) rotate(2deg)}
+  }
+
+  .card-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 36px;
+    color: #2a4a6b;
+    margin-bottom: 6px;
+  }
+
+  .card-bluey .card-name { color: #1a78bb; }
+  .card-bingo .card-name { color: #cc4400; }
+
+  .card-game {
+    font-size: 15px;
+    color: #666;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .card-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 3px solid currentColor;
+    border-radius: 999px;
+    padding: 8px 22px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 17px;
+    box-shadow: 3px 3px 0 currentColor;
+    transition: transform 0.1s;
+  }
+  .card-bluey .card-pill { color: #1a78bb; }
+  .card-bingo .card-pill { color: #cc4400; }
+  .card:hover .card-pill { transform: scale(1.05); }
+
+  /* Stars decoration */
+  .stars {
+    position: fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden;
+  }
+  .star {
+    position:absolute; width:6px; height:6px;
+    background:#fff; border-radius:50%;
+    opacity:0.6;
+    animation:twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:0.2;transform:scale(0.5)} }
+
+  /* Sun */
+  .sun {
+    position:fixed; top:40px; right:60px;
+    width:80px; height:80px;
+    background:radial-gradient(circle, #FFD93D 60%, rgba(255,217,61,0) 100%);
+    border-radius:50%;
+    box-shadow: 0 0 40px 20px rgba(255,217,61,0.4);
+    animation: sun-pulse 4s ease-in-out infinite;
+    z-index:1;
+  }
+  @keyframes sun-pulse { 0%,100%{box-shadow:0 0 40px 20px rgba(255,217,61,0.4)} 50%{box-shadow:0 0 60px 30px rgba(255,217,61,0.3)} }
+
+  /* Birds */
+  .bird {
+    position:fixed; z-index:1; pointer-events:none;
+    font-size:22px;
+    animation: fly linear infinite;
+  }
+  @keyframes fly {
+    from { transform: translateX(-80px); }
+    to   { transform: translateX(110vw); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background decoration -->
+<div class="sun"></div>
+<div class="stars" id="stars"></div>
+
+<!-- Floating birds -->
+<div class="bird" style="top:18%;animation-duration:18s;animation-delay:-4s">🐦</div>
+<div class="bird" style="top:12%;animation-duration:24s;animation-delay:-14s;font-size:16px">🐦</div>
+
+<!-- Clouds (CSS drawn) -->
+<div style="position:fixed;top:8%;left:5%;width:120px;height:40px;background:#fff;border-radius:40px;opacity:.8;z-index:1;animation:drift1 20s linear infinite"></div>
+<div style="position:fixed;top:15%;left:35%;width:90px;height:30px;background:#fff;border-radius:30px;opacity:.7;z-index:1;animation:drift2 25s linear infinite"></div>
+<div style="position:fixed;top:6%;right:15%;width:110px;height:36px;background:#fff;border-radius:36px;opacity:.75;z-index:1;animation:drift3 30s linear infinite"></div>
+<style>
+  @keyframes drift1 { 0%{transform:translateX(0)} 100%{transform:translateX(30px)} }
+  @keyframes drift2 { 0%{transform:translateX(0)} 100%{transform:translateX(-20px)} }
+  @keyframes drift3 { 0%{transform:translateX(0)} 100%{transform:translateX(25px)} }
+</style>
+
+<!-- Grass -->
+<div class="grass"></div>
+
+<!-- Main content -->
+<header>
+  <span class="logo-emoji">🏡</span>
+  <h1>Bluey's Backyard!</h1>
+  <p class="tagline">Play in the backyard with Bluey and Bingo! 🐾</p>
+</header>
+
+<div class="pick-label">👇 Who do you want to play as?</div>
+
+<div class="cards">
+  <a class="card card-bluey" href="./bluey.html">
+    <span class="card-avatar">🐕</span>
+    <div class="card-name">Bluey</div>
+    <div class="card-game">🍪 Biscuit Run</div>
+    <div class="card-pill">Play! →</div>
+  </a>
+
+  <a class="card card-bingo" href="./bingo.html">
+    <span class="card-avatar">🦊</span>
+    <div class="card-name">Bingo</div>
+    <div class="card-game">🌸 Flower Hunt</div>
+    <div class="card-pill">Play! →</div>
+  </a>
+</div>
+
+<script>
+  // Sprinkle stars
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random()*100 + '%';
+    s.style.top  = Math.random()*70 + '%';
+    s.style.animationDelay = Math.random()*4 + 's';
+    s.style.width = s.style.height = (4 + Math.random()*6) + 'px';
+    starsEl.appendChild(s);
+  }
+</script>
+</body>
+</html>
