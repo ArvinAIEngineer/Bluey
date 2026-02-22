@@ -368,6 +368,35 @@
       filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
     }
 
+    #mute-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 50;
+      font-size: 24px;
+      background: #fff;
+      border: 3px solid #333;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #333;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    #mute-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 #333;
+    }
+
+    #mute-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #333;
+    }
+
     @keyframes pup {
       from {
         transform: translateY(0)
@@ -424,6 +453,8 @@
       <button class="play-btn" id="play-btn" onclick="startGame()">Let's Go! 🌺</button>
     </div>
   </div>
+
+  <button id="mute-btn">🔊</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -872,6 +903,44 @@
     const collectEl = document.getElementById('collect-val');
     const timerEl = document.getElementById('timer-val');
     const timerPill = document.getElementById('timer-pill');
+  // Music logic
+const bgMusic = new Audio('./bluey.mp3');
+bgMusic.loop = true;
+
+// Restore mute state
+let isMuted = localStorage.getItem('blueyMusicMuted') === 'true';
+bgMusic.muted = isMuted;
+
+const muteBtn = document.getElementById('mute-btn');
+if(muteBtn) muteBtn.textContent = isMuted ? '🔇' : '🔊';
+
+if(muteBtn) {
+  muteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isMuted = !isMuted;
+    bgMusic.muted = isMuted;
+    localStorage.setItem('blueyMusicMuted', isMuted);
+    muteBtn.textContent = isMuted ? '🔇' : '🔊';
+  });
+}
+
+// Resume where we left off
+const savedTime = localStorage.getItem('blueyMusicTime');
+if (savedTime) bgMusic.currentTime = parseFloat(savedTime);
+
+// Attempt play immediately
+const playPromise = bgMusic.play();
+if (playPromise !== undefined) {
+  playPromise.catch(error => {
+    // If it still got blocked (e.g. direct nav), tie it to the first click anywhere
+    document.body.addEventListener('click', () => { bgMusic.play(); }, { once: true });
+  });
+}
+
+// Save position periodically
+setInterval(() => {
+  localStorage.setItem('blueyMusicTime', bgMusic.currentTime);
+}, 1000);
     const popup = document.getElementById('popup');
     const screen = document.getElementById('screen');
 

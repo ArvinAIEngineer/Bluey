@@ -359,6 +359,77 @@
         transform: translateX(110vw);
       }
     }
+
+    #mute-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 50;
+      font-size: 24px;
+      background: #fff;
+      border: 3px solid #333;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #333;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    #mute-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 #333;
+    }
+
+    #mute-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #333;
+    }
+
+    /* Splash Screen */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(160deg, #5bbfea 0%, #87CEEB 40%, #a8e6ff 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.5s ease-out;
+    }
+
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .start-btn {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(24px, 5vw, 40px);
+      color: #fff;
+      background: #ff8c42;
+      border: 4px solid #2a4a6b;
+      border-radius: 999px;
+      padding: 16px 40px;
+      cursor: pointer;
+      box-shadow: 6px 6px 0 #2a4a6b;
+      transition: transform 0.1s, box-shadow 0.1s;
+      margin-top: 20px;
+    }
+
+    .start-btn:hover {
+      transform: translate(-4px, -4px);
+      box-shadow: 10px 10px 0 #2a4a6b;
+    }
+
+    .start-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 3px 3px 0 #2a4a6b;
+    }
   </style>
 </head>
 
@@ -442,6 +513,15 @@
     </a>
   </div>
 
+  <!-- Splash Screen -->
+  <div id="splash">
+    <span class="logo-emoji" style="font-size: 80px;">🏡</span>
+    <h1 style="font-size: clamp(40px, 8vw, 80px);">Welcome!</h1>
+    <button class="start-btn" id="start-btn">Enter the Backyard! 🐾</button>
+  </div>
+
+  <button id="mute-btn">🔊</button>
+
   <!-- Global Music Player -->
   <audio id="bg-music" loop>
     <source src="./bluey.mp3" type="audio/mpeg">
@@ -450,23 +530,46 @@
   <script>
     // Global music script
     const bgMusic = document.getElementById('bg-music');
+    const muteBtn = document.getElementById('mute-btn');
+    const splash = document.getElementById('splash');
+    const startBtn = document.getElementById('start-btn');
+
+    // Restore mute state
+    let isMuted = localStorage.getItem('blueyMusicMuted') === 'true';
+    bgMusic.muted = isMuted;
+    muteBtn.textContent = isMuted ? '🔇' : '🔊';
+
+    muteBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // prevent triggering global click play
+      isMuted = !isMuted;
+      bgMusic.muted = isMuted;
+      localStorage.setItem('blueyMusicMuted', isMuted);
+      muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    });
+
+    // Handle Start button click to initialize audio and hide splash
+    startBtn.addEventListener('click', () => {
+      bgMusic.play();
+      splash.classList.add('hidden');
+    });
 
     // Try to restore playback position
+    // We only try to play automatically if we are already playing.
     const savedTime = localStorage.getItem('blueyMusicTime');
     if (savedTime) {
       bgMusic.currentTime = parseFloat(savedTime);
     }
 
-    // Try to play immediately (might be blocked by autoplay policies)
-    const playPromise = bgMusic.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        // Audio autoplay was prevented. Need user interaction to start.
-        // We can start it when the user clicks anywhere on the document.
-        document.body.addEventListener('click', () => {
-          bgMusic.play();
-        }, { once: true });
-      });
+    // Auto-hide splash and attempt play if already interacted on other pages
+    if (savedTime) {
+      splash.classList.add('hidden');
+      const playPromise = bgMusic.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // If browser still blocks, show splash again
+          splash.classList.remove('hidden');
+        });
+      }
     }
 
     // Save playback position periodically
