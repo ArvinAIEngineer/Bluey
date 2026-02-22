@@ -391,6 +391,33 @@
       box-shadow: 1px 1px 0 #333;
     }
 
+    /* ── PARENT BUTTON ── */
+    #parent-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 50;
+      font-family: 'Fredoka One', cursive;
+      font-size: 16px;
+      background: #fff;
+      border: 3px solid #333;
+      border-radius: 12px;
+      padding: 8px 16px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #333;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    #parent-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 #333;
+    }
+
+    #parent-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #333;
+    }
+
     /* Splash Screen */
     #splash {
       position: fixed;
@@ -529,6 +556,7 @@
   </div>
 
   <button id="mute-btn">🔊</button>
+  <button id="parent-btn" onclick="openParentMenu()">🔒 Parents</button>
 
   <!-- Global Music Player -->
   <audio id="bg-music" loop>
@@ -584,6 +612,18 @@
     setInterval(() => {
       localStorage.setItem('blueyMusicTime', bgMusic.currentTime);
     }, 1000);
+
+    // Parent Gate Logic
+    function openParentMenu() {
+      const a = Math.floor(Math.random() * 5) + 3;
+      const b = Math.floor(Math.random() * 5) + 3;
+      const ans = prompt(`Grown-ups only! What is ${a} × ${b}?`);
+      if (ans && parseInt(ans) === a * b) {
+        window.location.href = './setup.html';
+      } else if (ans !== null) {
+        alert("Oops! That's not right.");
+      }
+    }
 
     // Sprinkle stars
     const starsEl = document.getElementById('stars');

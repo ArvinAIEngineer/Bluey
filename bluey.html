@@ -443,8 +443,24 @@
   <button id="mute-btn">🔊</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="./items-lib.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script>
+    // READ URL PARAMS
+    const params = new URLSearchParams(window.location.search);
+    const itmId = params.get('item') || 'biscuit';
+    const ITEM_DEF = window.ITEMS[itmId] || window.ITEMS['biscuit'];
+    const TOTAL = parseInt(params.get('count')) || 12;
+    const TIME_LIMIT = parseInt(params.get('time')) || 60;
+
+    // Update UI elements dynamically on load
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelector('#score-val').previousElementSibling.textContent = ITEM_DEF.emoji;
+      document.getElementById('s-title').innerHTML = `Bluey's<br>${ITEM_DEF.name || ITEM_DEF.label} Run!`;
+      document.getElementById('s-sub').innerHTML = `Run around the backyard and collect all the ${ITEM_DEF.name || ITEM_DEF.label.toLowerCase()} before time runs out! ${ITEM_DEF.emoji}`;
+      document.getElementById('timer-val').textContent = TIME_LIMIT;
+    });
+
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
@@ -532,15 +548,49 @@
     function cloud(x, y, z, sc = 1) { [[0, 0, 0, 1.0], [0.9, 0.3, 0, 0.8], [-0.8, 0.2, 0, 0.75], [0, 0.5, 0, 0.7], [0.4, 0.6, 0.3, 0.55]].forEach(([dx, dy, dz, r]) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r * sc, 8, 6), cloudMat); m.position.set(x + dx * sc, y + dy * sc, z + dz * sc); scene.add(m); }); }
     cloud(-8, 18, -15, 1.2); cloud(6, 20, -18, 1.0); cloud(12, 17, -10, 0.9); cloud(-14, 19, 5, 1.1); cloud(3, 21, 10, 0.8);
 
-    const TOTAL = 12, biscuitGroup = new THREE.Group(); scene.add(biscuitGroup);
-    const biscuits = [];
-    const bMat = new THREE.MeshStandardMaterial({ color: 0xD4A96A, roughness: 0.7 });
-    const iMat = new THREE.MeshStandardMaterial({ color: 0xFFB6C1, emissive: 0xff9999, emissiveIntensity: 0.3, roughness: 0.5 });
-    function spawnBiscuits() { biscuits.forEach(b => biscuitGroup.remove(b.mesh)); biscuits.length = 0; for (let i = 0; i < TOTAL; i++) { let bx, bz, bad, tries = 0; do { bx = (Math.random() - .5) * (BOUND * 2 - 4); bz = (Math.random() - .5) * (BOUND * 2 - 4); bad = Math.hypot(bx - player.x, bz - player.z) < 3 || obstacles.some(o => Math.hypot(bx - o.x, bz - o.z) < o.r + 1.5); tries++; } while (bad && tries < 100); const g = new THREE.Group(); const base = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.13, 12), bMat); base.castShadow = true; g.add(base); const ic = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), iMat); ic.position.y = 0.12; g.add(ic); const gl = new THREE.PointLight(0xffcc88, 0.8, 2.5); gl.position.y = 0.4; g.add(gl); g.position.set(bx, 0.45, bz); biscuitGroup.add(g); biscuits.push({ mesh: g, x: bx, z: bz, collected: false, phase: Math.random() * Math.PI * 2 }); } }
+    const collectGroup = new THREE.Group(); scene.add(collectGroup);
+    const collectibles = [];
+
+    function spawnCollectibles() {
+      collectibles.forEach(b => collectGroup.remove(b.mesh));
+      collectibles.length = 0;
+      for (let i = 0; i < TOTAL; i++) {
+        let bx, bz, bad, tries = 0;
+        do {
+          bx = (Math.random() - .5) * (BOUND * 2 - 4);
+          bz = (Math.random() - .5) * (BOUND * 2 - 4);
+          bad = Math.hypot(bx - player.x, bz - player.z) < 3 || obstacles.some(o => Math.hypot(bx - o.x, bz - o.z) < o.r + 1.5);
+          tries++;
+        } while (bad && tries < 100);
+
+        const g = new THREE.Group();
+        const mesh = ITEM_DEF.build();
+        mesh.castShadow = true;
+        g.add(mesh);
+
+        const gl = new THREE.PointLight(ITEM_DEF.glow || 0xffffff, 1.0, 2.5);
+        gl.position.y = 0.5;
+        g.add(gl);
+
+        g.position.set(bx, 0.45, bz);
+        collectGroup.add(g);
+        collectibles.push({ mesh: g, x: bx, z: bz, collected: false, phase: Math.random() * Math.PI * 2 });
+      }
+    }
 
     const particles = [];
-    const pCols = [0xFFD93D, 0xFF8C42, 0xff6b9d, 0x4db8f0, 0x6ecf6e];
-    function spawnParticles(x, z) { for (let i = 0; i < 14; i++) { const col = pCols[Math.floor(Math.random() * pCols.length)]; const m = new THREE.Mesh(new THREE.SphereGeometry(0.07 + Math.random() * 0.09, 6, 6), new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9, transparent: true })); m.position.set(x, 0.45, z); const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 5; scene.add(m); particles.push({ mesh: m, vx: Math.cos(a) * sp, vy: 4 + Math.random() * 5, vz: Math.sin(a) * sp, life: 1.0 }); } }
+    function spawnParticles(x, z) {
+      const pCols = ITEM_DEF.popColors || [0xffffff];
+      for (let i = 0; i < 16; i++) {
+        const col = pCols[Math.floor(Math.random() * pCols.length)];
+        const m = new THREE.Mesh(new THREE.SphereGeometry(0.07 + Math.random() * 0.09, 6, 6),
+          new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9, transparent: true }));
+        m.position.set(x, 0.45, z);
+        const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 5;
+        scene.add(m);
+        particles.push({ mesh: m, vx: Math.cos(a) * sp, vy: 4 + Math.random() * 5, vz: Math.sin(a) * sp, life: 1.0 });
+      }
+    }
 
     const player = { group: null, mixer: null, blastAction: null, x: 0, z: 0, speed: 6, radius: 0.5, facing: 0, blasting: false };
 
@@ -606,18 +656,21 @@
       }
     });
 
-    let score = 0, collected = 0, timeLeft = 60, gameRunning = false, timerInterval = null, lastTime = 0;
+    let score = 0, collected = 0, timeLeft = TIME_LIMIT, gameRunning = false, timerInterval = null, lastTime = 0;
     const scoreEl = document.getElementById('score-val'), collectEl = document.getElementById('collect-val'), timerEl = document.getElementById('timer-val'), timerPill = document.getElementById('timer-pill'), popup = document.getElementById('popup'), screen = document.getElementById('screen');
 
     function updateHUD() { scoreEl.textContent = score; collectEl.textContent = `${collected}/${TOTAL}`; timerEl.textContent = timeLeft; }
-    const msgs = ['Wackadoo! 🎉', "That's fancy!", 'Yum! 🍪', '+10!', 'Woohoo!', 'Magic! ✨'];
-    function showPopup() { popup.textContent = msgs[Math.floor(Math.random() * msgs.length)]; popup.classList.remove('pop-go'); void popup.offsetWidth; popup.classList.add('pop-go'); }
+    function showPopup() {
+      const msgs = ITEM_DEF.msgs || ['Wackadoo! 🎉', "That's fancy!", '+10!', 'Woohoo!', 'Magic! ✨'];
+      popup.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+      popup.classList.remove('pop-go'); void popup.offsetWidth; popup.classList.add('pop-go');
+    }
 
-    function startGame() { if (!player.group) return; score = 0; collected = 0; timeLeft = 60; gameRunning = true; player.blasting = false; player.x = 0; player.z = 2; player.group.position.set(0, 0, 2); if (player.mixer) player.mixer.stopAllAction(); spawnBiscuits(); updateHUD(); screen.classList.add('hidden'); document.getElementById('s-stats').style.display = 'none'; timerPill.classList.remove('urgent'); if (timerInterval) clearInterval(timerInterval); timerInterval = setInterval(() => { if (!gameRunning) return; timeLeft--; updateHUD(); if (timeLeft <= 10) timerPill.classList.add('urgent'); if (timeLeft <= 0) endGame(false); }, 1000); }
+    function startGame() { if (!player.group) return; score = 0; collected = 0; timeLeft = TIME_LIMIT; gameRunning = true; player.blasting = false; player.x = 0; player.z = 2; player.group.position.set(0, 0, 2); if (player.mixer) player.mixer.stopAllAction(); spawnCollectibles(); updateHUD(); screen.classList.add('hidden'); document.getElementById('s-stats').style.display = 'none'; timerPill.classList.remove('urgent'); if (timerInterval) clearInterval(timerInterval); timerInterval = setInterval(() => { if (!gameRunning) return; timeLeft--; updateHUD(); if (timeLeft <= 10) timerPill.classList.add('urgent'); if (timeLeft <= 0) endGame(false); }, 1000); }
 
-    function endGame(won) { gameRunning = false; clearInterval(timerInterval); timerPill.classList.remove('urgent'); if (!won && player.blastAction) { player.blasting = true; player.blastAction.reset().play(); } document.getElementById('s-title').textContent = won ? "That's Fancy!" : "Oh No! Time's Up!"; document.getElementById('s-sub').textContent = won ? 'You got all the biscuits! Well done! 🐾' : "Bandit ate the rest! Try again!"; const stats = document.getElementById('s-stats'); stats.style.display = 'block'; stats.innerHTML = `🍪 Biscuits: ${collected}/${TOTAL}<br>⭐ Score: ${score}`; document.getElementById('play-btn').textContent = 'Play Again! 🐾'; screen.classList.remove('hidden'); }
+    function endGame(won) { gameRunning = false; clearInterval(timerInterval); timerPill.classList.remove('urgent'); if (!won && player.blastAction) { player.blasting = true; player.blastAction.reset().play(); } document.getElementById('s-title').textContent = won ? "That's Fancy!" : "Oh No! Time's Up!"; document.getElementById('s-sub').textContent = won ? `You got all the ${ITEM_DEF.name || ITEM_DEF.label.toLowerCase()}! Well done! 🐾` : "Run out of time! Try again!"; const stats = document.getElementById('s-stats'); stats.style.display = 'block'; stats.innerHTML = `${ITEM_DEF.emoji} ${ITEM_DEF.name || ITEM_DEF.label}: ${collected}/${TOTAL}<br>⭐ Score: ${score}`; document.getElementById('play-btn').textContent = 'Play Again! 🐾'; screen.classList.remove('hidden'); }
 
-    function animate(now) { requestAnimationFrame(animate); const dt = Math.min((now - lastTime) / 1000, 0.05); lastTime = now; if (player.mixer && player.blasting) player.mixer.update(dt); if (gameRunning && player.group) { let dx = 0, dz = 0; if (keys['KeyW'] || keys['ArrowUp']) dz -= 1; if (keys['KeyS'] || keys['ArrowDown']) dz += 1; if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1; if (keys['KeyD'] || keys['ArrowRight']) dx += 1; if (joy.active) { dx += joy.dx; dz += joy.dz; } const moving = Math.hypot(dx, dz) > 0.1; if (moving) { const len = Math.hypot(dx, dz); dx /= len; dz /= len; const nx = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.x + dx * player.speed * dt)); const nz = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.z + dz * player.speed * dt)); if (!obstacles.some(o => Math.hypot(nx - o.x, nz - o.z) < o.r + player.radius)) { player.x = nx; player.z = nz; } player.facing = Math.atan2(dx, dz); } const bobY = moving ? Math.sin(now * 0.013) * 0.055 : Math.sin(now * 0.004) * 0.02; player.group.position.set(player.x, bobY, player.z); player.group.rotation.y = player.facing; playerSpot.position.set(player.x, 7, player.z); playerSpot.target.position.set(player.x, 0, player.z); playerSpot.target.updateMatrixWorld(); const t = now / 1000; for (const b of biscuits) { if (b.collected) continue; b.mesh.rotation.y = t * 1.8 + b.phase; b.mesh.position.y = 0.45 + Math.sin(t * 2.5 + b.phase) * 0.1; if (Math.hypot(player.x - b.x, player.z - b.z) < 1.0) { b.collected = true; biscuitGroup.remove(b.mesh); spawnParticles(b.x, b.z); score += 10; collected++; updateHUD(); showPopup(); if (collected >= TOTAL) endGame(true); } } camera.position.x += (player.x * 0.3 - camera.position.x) * 0.07; camera.position.z += (player.z * 0.3 + 18 - camera.position.z) * 0.07; camera.position.y += (14 - camera.position.y) * 0.05; camera.lookAt(player.x, 0.8, player.z); } for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.life -= dt * 1.6; if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); continue; } p.mesh.position.x += p.vx * dt; p.mesh.position.y += p.vy * dt; p.mesh.position.z += p.vz * dt; p.vy -= 9.8 * dt; p.mesh.material.opacity = p.life; } renderer.render(scene, camera); }
+    function animate(now) { requestAnimationFrame(animate); const dt = Math.min((now - lastTime) / 1000, 0.05); lastTime = now; if (player.mixer && player.blasting) player.mixer.update(dt); if (gameRunning && player.group) { let dx = 0, dz = 0; if (keys['KeyW'] || keys['ArrowUp']) dz -= 1; if (keys['KeyS'] || keys['ArrowDown']) dz += 1; if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1; if (keys['KeyD'] || keys['ArrowRight']) dx += 1; if (joy.active) { dx += joy.dx; dz += joy.dz; } const moving = Math.hypot(dx, dz) > 0.1; if (moving) { const len = Math.hypot(dx, dz); dx /= len; dz /= len; const nx = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.x + dx * player.speed * dt)); const nz = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.z + dz * player.speed * dt)); if (!obstacles.some(o => Math.hypot(nx - o.x, nz - o.z) < o.r + player.radius)) { player.x = nx; player.z = nz; } player.facing = Math.atan2(dx, dz); } const bobY = moving ? Math.sin(now * 0.013) * 0.055 : Math.sin(now * 0.004) * 0.02; player.group.position.set(player.x, bobY, player.z); player.group.rotation.y = player.facing; playerSpot.position.set(player.x, 7, player.z); playerSpot.target.position.set(player.x, 0, player.z); playerSpot.target.updateMatrixWorld(); const t = now / 1000; for (const b of collectibles) { if (b.collected) continue; b.mesh.rotation.y = t * 1.8 + b.phase; b.mesh.position.y = 0.45 + Math.sin(t * 2.5 + b.phase) * 0.1; if (Math.hypot(player.x - b.x, player.z - b.z) < 1.0) { b.collected = true; collectGroup.remove(b.mesh); spawnParticles(b.x, b.z); score += 10; collected++; updateHUD(); showPopup(); if (collected >= TOTAL) endGame(true); } } camera.position.x += (player.x * 0.3 - camera.position.x) * 0.07; camera.position.z += (player.z * 0.3 + 18 - camera.position.z) * 0.07; camera.position.y += (14 - camera.position.y) * 0.05; camera.lookAt(player.x, 0.8, player.z); } for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.life -= dt * 1.6; if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); continue; } p.mesh.position.x += p.vx * dt; p.mesh.position.y += p.vy * dt; p.mesh.position.z += p.vz * dt; p.vy -= 9.8 * dt; p.mesh.material.opacity = p.life; } renderer.render(scene, camera); }
     // Music logic
     const bgMusic = new Audio('./bluey.mp3');
     bgMusic.loop = true;

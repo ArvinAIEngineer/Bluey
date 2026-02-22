@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🔒 Parent Challenge Builder</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800&display=swap');
+
+        :root {
+            --blue: #4db8f0;
+            --orange: #ff8c42;
+            --pink: #ff4da6;
+            --yellow: #FFD93D;
+            --green: #44cc44;
+            --purple: #9966ff;
+            --white: #FFFEF5;
+            --dark: #2a4a6b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(160deg, #1a3a5c 0%, #2a5a8c 50%, #1a3a5c 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── TOP BAR ─────────────────────────────────────────── */
+        .topbar {
+            background: rgba(0, 0, 0, .3);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            border-bottom: 2px solid rgba(255, 255, 255, .1);
+        }
+
+        .topbar-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(16px, 3.5vw, 22px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topbar-title span {
+            opacity: .7;
+        }
+
+        #back-home {
+            font-family: 'Fredoka One', cursive;
+            font-size: 14px;
+            background: #fff2;
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, .4);
+            border-radius: 999px;
+            padding: 6px 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .15s;
+        }
+
+        #back-home:hover {
+            background: #fff3;
+        }
+
+        /* ── MAIN LAYOUT ─────────────────────────────────────── */
+        .layout {
+            flex: 1;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            grid-template-rows: auto 1fr;
+            gap: 0;
+        }
+
+        /* ── CHARACTER SELECT ────────────────────────────────── */
+        .char-bar {
+            grid-column: 1/-1;
+            padding: 12px 16px 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            background: rgba(0, 0, 0, .2);
+            border-bottom: 1px solid rgba(255, 255, 255, .1);
+            flex-shrink: 0;
+        }
+
+        .char-bar label {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(14px, 2.5vw, 17px);
+            opacity: .8;
+        }
+
+        .char-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .char-btn {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(14px, 2.5vw, 17px);
+            padding: 7px 20px;
+            border-radius: 999px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all .15s;
+            background: rgba(255, 255, 255, .1);
+        }
+
+        .char-btn.active-blue {
+            background: #4db8f0;
+            border-color: #fff;
+            color: #1a2a3a;
+            box-shadow: 0 4px 14px #4db8f055;
+        }
+
+        .char-btn.active-orange {
+            background: #ff8c42;
+            border-color: #fff;
+            color: #1a2a3a;
+            box-shadow: 0 4px 14px #ff8c4255;
+        }
+
+        .char-btn:not(.active-blue):not(.active-orange):hover {
+            background: rgba(255, 255, 255, .2);
+        }
+
+        /* ── ITEM BROWSER (left panel) ───────────────────────── */
+        .item-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-right: 1px solid rgba(255, 255, 255, .1);
+        }
+
+        .cat-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 10px 12px 0;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .cat-tabs::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .cat-tabs::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .3);
+            border-radius: 3px;
+        }
+
+        .cat-tab {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(11px, 2vw, 14px);
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            white-space: nowrap;
+            background: rgba(255, 255, 255, .1);
+            border: 2px solid transparent;
+            transition: all .15s;
+        }
+
+        .cat-tab.active {
+            background: var(--yellow);
+            color: var(--dark);
+            border-color: #fff;
+        }
+
+        .cat-tab:not(.active):hover {
+            background: rgba(255, 255, 255, .2);
+        }
+
+        .item-grid-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .item-grid-wrap::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .item-grid-wrap::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .3);
+            border-radius: 3px;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+            gap: 7px;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, .08);
+            border: 2px solid rgba(255, 255, 255, .15);
+            border-radius: 14px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .15s;
+            user-select: none;
+        }
+
+        .item-card:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: translateY(-2px);
+        }
+
+        .item-card.selected {
+            background: rgba(255, 217, 61, .25);
+            border-color: var(--yellow);
+            box-shadow: 0 0 12px rgba(255, 217, 61, .4);
+            transform: translateY(-2px) scale(1.06);
+        }
+
+        .item-emoji {
+            font-size: clamp(22px, 4vw, 28px);
+            display: block;
+            line-height: 1.2;
+        }
+
+        .item-name {
+            font-size: clamp(9px, 1.5vw, 11px);
+            font-weight: 700;
+            margin-top: 3px;
+            opacity: .85;
+            line-height: 1.2;
+        }
+
+        /* ── SETTINGS PANEL (right) ──────────────────────────── */
+        .settings-panel {
+            padding: 14px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, .2);
+        }
+
+        .settings-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .settings-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .25);
+            border-radius: 2px;
+        }
+
+        .setting-block {}
+
+        .setting-label {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(13px, 2.2vw, 16px);
+            opacity: .8;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* Selected item preview */
+        .preview-box {
+            background: rgba(255, 255, 255, .1);
+            border: 2px solid rgba(255, 255, 255, .2);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .preview-emoji {
+            font-size: clamp(36px, 6vw, 52px);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .preview-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(14px, 2.5vw, 18px);
+            color: var(--yellow);
+        }
+
+        .preview-none {
+            font-size: 14px;
+            opacity: .5;
+        }
+
+        /* Sliders */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-val {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(18px, 3vw, 24px);
+            min-width: 38px;
+            text-align: center;
+            color: var(--yellow);
+        }
+
+        input[type=range] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, .2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--yellow);
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            opacity: .5;
+            margin-top: 2px;
+        }
+
+        /* Summary */
+        .summary-box {
+            background: rgba(255, 255, 255, .1);
+            border: 2px solid rgba(255, 255, 255, .2);
+            border-radius: 14px;
+            padding: 12px;
+            font-size: clamp(11px, 2vw, 13px);
+            line-height: 1.8;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .summary-row b {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(13px, 2.2vw, 15px);
+            color: var(--yellow);
+        }
+
+        /* GO button */
+        .go-btn {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(16px, 3vw, 20px);
+            color: var(--dark);
+            background: var(--yellow);
+            border: 3px solid rgba(0, 0, 0, .2);
+            border-radius: 999px;
+            padding: 12px 0;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, .25);
+            transition: transform .1s, box-shadow .1s;
+        }
+
+        .go-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, .25);
+        }
+
+        .go-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, .25);
+        }
+
+        .go-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── HANDOFF SCREEN ──────────────────────────────────── */
+        #handoff {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(160deg, #1a3a5c 0%, #2a6aac 50%, #1a3a5c 100%);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 100;
+            text-align: center;
+            padding: 24px;
+        }
+
+        #handoff.show {
+            display: flex;
+        }
+
+        .handoff-char {
+            width: clamp(100px, 22vw, 160px);
+            filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .5));
+            animation: bob .8s ease-in-out infinite alternate;
+        }
+
+        @keyframes bob {
+            from {
+                transform: translateY(0)
+            }
+
+            to {
+                transform: translateY(-12px)
+            }
+        }
+
+        .handoff-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(28px, 6vw, 48px);
+            color: #fff;
+            -webkit-text-stroke: 2px var(--dark);
+            text-shadow: 3px 3px 0 var(--dark);
+        }
+
+        .handoff-challenge {
+            background: rgba(255, 255, 255, .15);
+            backdrop-filter: blur(8px);
+            border: 3px solid rgba(255, 255, 255, .35);
+            border-radius: 20px;
+            padding: 16px 28px;
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(16px, 3.5vw, 24px);
+            line-height: 1.5;
+        }
+
+        .handoff-launch {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(20px, 4.5vw, 32px);
+            color: var(--dark);
+            background: var(--yellow);
+            border: 4px solid rgba(0, 0, 0, .2);
+            border-radius: 999px;
+            padding: 16px 48px;
+            cursor: pointer;
+            margin-top: 4px;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, .25);
+            transition: transform .1s, box-shadow .1s;
+        }
+
+        .handoff-launch:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 0 rgba(0, 0, 0, .25);
+        }
+
+        .handoff-launch:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, .25);
+        }
+
+        .handoff-back {
+            font-family: 'Fredoka One', cursive;
+            font-size: 14px;
+            color: rgba(255, 255, 255, .6);
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-top: 4px;
+            text-decoration: underline;
+        }
+
+        .handoff-back:hover {
+            color: #fff;
+        }
+
+        /* ── MOBILE OVERRIDE ─────────────────────────────────── */
+        @media (max-width:600px) {
+            .layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .item-panel {
+                max-height: 52vh;
+            }
+
+            .settings-panel {
+                border-top: 1px solid rgba(255, 255, 255, .1);
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 10px;
+                max-height: none;
+            }
+
+            .setting-block {
+                flex: 1 1 140px;
+            }
+
+            .go-btn {
+                flex: 0 0 100%;
+            }
+
+            .preview-box {
+                flex: 0 0 140px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="topbar-title">🔒 Parent Challenge Builder <span>— Set a mission for your kid!</span></div>
+        <a href="./index.html" id="back-home">🏡 Home</a>
+    </div>
+
+    <!-- Main layout -->
+    <div class="layout">
+
+        <!-- Character toggle + category row -->
+        <div class="char-bar">
+            <label>Playing as:</label>
+            <div class="char-toggle">
+                <button class="char-btn active-blue" data-char="bluey" onclick="setChar('bluey',this)">🐕 Bluey</button>
+                <button class="char-btn" data-char="bingo" onclick="setChar('bingo',this)">🦊 Bingo</button>
+            </div>
+            <div style="flex:1"></div>
+            <label>Category:</label>
+            <div class="cat-tabs" id="cat-tabs">
+                <button class="cat-tab active" data-cat="food" onclick="setCategory('food',this)">🍕 Food</button>
+                <button class="cat-tab" data-cat="nature" onclick="setCategory('nature',this)">🌸 Nature</button>
+                <button class="cat-tab" data-cat="toys" onclick="setCategory('toys',this)">🧸 Toys</button>
+                <button class="cat-tab" data-cat="treasures" onclick="setCategory('treasures',this)">💎
+                    Treasures</button>
+                <button class="cat-tab" data-cat="animals" onclick="setCategory('animals',this)">🐾 Animals</button>
+            </div>
+        </div>
+
+        <!-- Left: item grid -->
+        <div class="item-panel">
+            <div class="item-grid-wrap">
+                <div class="item-grid" id="item-grid"></div>
+            </div>
+        </div>
+
+        <!-- Right: settings -->
+        <div class="settings-panel">
+
+            <!-- Preview -->
+            <div class="setting-block">
+                <span class="setting-label">Selected Item</span>
+                <div class="preview-box" id="preview-box">
+                    <span class="preview-none">← Pick an item!</span>
+                </div>
+            </div>
+
+            <!-- Count slider -->
+            <div class="setting-block">
+                <span class="setting-label">How many to collect?</span>
+                <div class="slider-row">
+                    <span class="slider-val" id="count-val">8</span>
+                    <input type="range" id="count-slider" min="3" max="25" step="1" value="8"
+                        oninput="updateCount(this.value)">
+                </div>
+                <div class="slider-labels"><span>3 (easy)</span><span>25 (hard)</span></div>
+            </div>
+
+            <!-- Time slider -->
+            <div class="setting-block">
+                <span class="setting-label">Time to collect them?</span>
+                <div class="slider-row">
+                    <span class="slider-val" id="time-val">60s</span>
+                    <input type="range" id="time-slider" min="20" max="120" step="5" value="60"
+                        oninput="updateTime(this.value)">
+                </div>
+                <div class="slider-labels"><span>20s</span><span>120s</span></div>
+            </div>
+
+            <!-- Summary -->
+            <div class="setting-block">
+                <span class="setting-label">Challenge Preview</span>
+                <div class="summary-box" id="summary-box">
+                    <div class="summary-row">Pick an item to start! 👆</div>
+                </div>
+            </div>
+
+            <!-- GO button -->
+            <button class="go-btn" id="go-btn" disabled onclick="launchHandoff()">
+                Set Challenge! 🎉
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Handoff Screen -->
+    <div id="handoff">
+        <img class="handoff-char" id="handoff-char" src="./bluey.png" alt="">
+        <div class="handoff-title" id="handoff-title">Ready for a Challenge!</div>
+        <div class="handoff-challenge" id="handoff-text"></div>
+        <button class="handoff-launch" id="handoff-launch" onclick="launchGame()">Let's Go! 🐾</button>
+        <button class="handoff-back" onclick="closeHandoff()">← Change settings</button>
+    </div>
+
+    <script>
+        // ── State ─────────────────────────────────────────────────────────────────
+        let selectedChar = 'bluey';
+        let selectedItem = null;
+        let selectedCount = 8;
+        let selectedTime = 60;
+        let currentCat = 'food';
+
+        // ── Full item catalogue (mirrors items-lib.js categories) ─────────────────
+        const CATALOGUE = {
+            food: [
+                { key: 'biscuit', label: 'Biscuits', emoji: '🍪' },
+                { key: 'apple', label: 'Apples', emoji: '🍎' },
+                { key: 'banana', label: 'Bananas', emoji: '🍌' },
+                { key: 'orange', label: 'Oranges', emoji: '🍊' },
+                { key: 'strawberry', label: 'Strawberries', emoji: '🍓' },
+                { key: 'watermelon', label: 'Watermelons', emoji: '🍉' },
+                { key: 'cherry', label: 'Cherries', emoji: '🍒' },
+                { key: 'carrot', label: 'Carrots', emoji: '🥕' },
+                { key: 'cupcake', label: 'Cupcakes', emoji: '🧁' },
+                { key: 'donut', label: 'Donuts', emoji: '🍩' },
+                { key: 'lollipop', label: 'Lollipops', emoji: '🍭' },
+                { key: 'pizza', label: 'Pizza Slices', emoji: '🍕' },
+            ],
+            nature: [
+                { key: 'flower', label: 'Flowers', emoji: '🌸' },
+                { key: 'sunflower', label: 'Sunflowers', emoji: '🌻' },
+                { key: 'mushroom', label: 'Mushrooms', emoji: '🍄' },
+                { key: 'leaf', label: 'Leaves', emoji: '🍀' },
+                { key: 'acorn', label: 'Acorns', emoji: '🌰' },
+                { key: 'shell', label: 'Shells', emoji: '🐚' },
+                { key: 'crystal', label: 'Crystals', emoji: '💎' },
+                { key: 'star', label: 'Stars', emoji: '⭐' },
+                { key: 'heart', label: 'Hearts', emoji: '❤️' },
+                { key: 'pinecone', label: 'Pinecones', emoji: '🌲' },
+            ],
+            toys: [
+                { key: 'ball', label: 'Balls', emoji: '⚽' },
+                { key: 'balloon', label: 'Balloons', emoji: '🎈' },
+                { key: 'kite', label: 'Kites', emoji: '🪁' },
+                { key: 'gift', label: 'Gifts', emoji: '🎁' },
+                { key: 'rocket', label: 'Rockets', emoji: '🚀' },
+                { key: 'car', label: 'Cars', emoji: '🚗' },
+                { key: 'robot', label: 'Robots', emoji: '🤖' },
+                { key: 'top', label: 'Spinning Tops', emoji: '🪀' },
+                { key: 'dice', label: 'Dice', emoji: '🎲' },
+                { key: 'crown', label: 'Crowns', emoji: '👑' },
+            ],
+            treasures: [
+                { key: 'coin', label: 'Coins', emoji: '🪙' },
+                { key: 'gem', label: 'Gems', emoji: '💎' },
+                { key: 'trophy', label: 'Trophies', emoji: '🏆' },
+                { key: 'key', label: 'Keys', emoji: '🔑' },
+                { key: 'lantern', label: 'Lanterns', emoji: '🏮' },
+                { key: 'potion', label: 'Potions', emoji: '🧪' },
+                { key: 'chest', label: 'Treasure Chests', emoji: '📦' },
+                { key: 'ring', label: 'Rings', emoji: '💍' },
+                { key: 'diamond', label: 'Diamonds', emoji: '💠' },
+                { key: 'medal', label: 'Medals', emoji: '🥇' },
+            ],
+            animals: [
+                { key: 'egg', label: 'Eggs', emoji: '🥚' },
+                { key: 'bone', label: 'Bones', emoji: '🦴' },
+                { key: 'fish', label: 'Fish', emoji: '🐟' },
+                { key: 'butterfly', label: 'Butterflies', emoji: '🦋' },
+                { key: 'bee', label: 'Bees', emoji: '🐝' },
+                { key: 'snail', label: 'Snails', emoji: '🐌' },
+                { key: 'frog', label: 'Frogs', emoji: '🐸' },
+                { key: 'pawprint', label: 'Paw Prints', emoji: '🐾' },
+            ]
+        };
+
+        // ── Render item grid ───────────────────────────────────────────────────────
+        function renderGrid(cat) {
+            const grid = document.getElementById('item-grid');
+            grid.innerHTML = '';
+            (CATALOGUE[cat] || []).forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card' + (selectedItem?.key === item.key ? ' selected' : '');
+                card.innerHTML = `<span class="item-emoji">${item.emoji}</span><div class="item-name">${item.label}</div>`;
+                card.onclick = (e) => selectItem(item, e);
+                grid.appendChild(card);
+            });
+        }
+
+        function setCategory(cat, btn) {
+            currentCat = cat;
+            document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGrid(cat);
+        }
+
+        function selectItem(item, event) {
+            selectedItem = item;
+            document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
+            if (event) event.currentTarget.classList.add('selected');
+            // Update preview
+            document.getElementById('preview-box').innerHTML =
+                `<span class="preview-emoji">${item.emoji}</span>
+         <div class="preview-name">${item.label}</div>`;
+            updateSummary();
+            document.getElementById('go-btn').disabled = false;
+        }
+
+        function setChar(char, btn) {
+            selectedChar = char;
+            document.querySelectorAll('.char-btn').forEach(b => {
+                b.classList.remove('active-blue', 'active-orange');
+            });
+            btn.classList.add(char === 'bluey' ? 'active-blue' : 'active-orange');
+            updateSummary();
+        }
+
+        function updateCount(val) {
+            selectedCount = parseInt(val);
+            document.getElementById('count-val').textContent = val;
+            updateSummary();
+        }
+
+        function updateTime(val) {
+            selectedTime = parseInt(val);
+            document.getElementById('time-val').textContent = val + 's';
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const box = document.getElementById('summary-box');
+            if (!selectedItem) {
+                box.innerHTML = '<div class="summary-row">Pick an item to start! 👆</div>';
+                return;
+            }
+            const charName = selectedChar === 'bluey' ? 'Bluey' : 'Bingo';
+            const difficulty = selectedCount <= 6 ? '😊 Easy'
+                : selectedCount <= 12 ? '😃 Normal'
+                    : selectedCount <= 18 ? '😤 Hard'
+                        : '🔥 Extreme';
+            box.innerHTML = `
+        <div class="summary-row">${selectedChar === 'bluey' ? '🐕' : '🦊'} <b>${charName}</b></div>
+        <div class="summary-row">${selectedItem.emoji} <b>Collect ${selectedCount} ${selectedItem.label}</b></div>
+        <div class="summary-row">⏰ <b>In ${selectedTime} seconds</b></div>
+        <div class="summary-row">💪 <b>${difficulty}</b></div>`;
+        }
+
+        function launchHandoff() {
+            if (!selectedItem) return;
+            const charName = selectedChar === 'bluey' ? 'Bluey' : 'Bingo';
+            document.getElementById('handoff-char').src = `./${selectedChar}.png`;
+            document.getElementById('handoff-title').textContent = `${charName}'s Challenge! 🎉`;
+            document.getElementById('handoff-text').innerHTML =
+                `Collect <b>${selectedCount} ${selectedItem.label}</b> ${selectedItem.emoji}<br>
+         in just <b>${selectedTime} seconds!</b> ⏰<br>
+         <span style="font-size:.8em;opacity:.8">Hand the device to your child 👇</span>`;
+            document.getElementById('handoff').classList.add('show');
+        }
+
+        function closeHandoff() {
+            document.getElementById('handoff').classList.remove('show');
+        }
+
+        function launchGame() {
+            if (!selectedItem) return;
+            const file = selectedChar === 'bluey' ? 'bluey.html' : 'bingo.html';
+            const params = new URLSearchParams({
+                item: selectedItem.key,
+                count: selectedCount,
+                time: selectedTime,
+                label: selectedItem.label,
+                emoji: selectedItem.emoji
+            });
+            window.location.href = `./${file}?${params.toString()}`;
+        }
+
+        // ── Init ──────────────────────────────────────────────────────────────────
+        renderGrid('food');
+
+        // Pre-select first item in food
+        const firstItem = CATALOGUE.food[0];
+        selectedItem = firstItem;
+        document.getElementById('preview-box').innerHTML =
+            `<span class="preview-emoji">${firstItem.emoji}</span>
+       <div class="preview-name">${firstItem.label}</div>`;
+        updateSummary();
+        document.getElementById('go-btn').disabled = false;
+        setTimeout(() => {
+            const cards = document.querySelectorAll('.item-card');
+            if (cards[0]) cards[0].classList.add('selected');
+        }, 50);
+    </script>
+</body>
+
+</html>
