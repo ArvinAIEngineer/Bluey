@@ -6,7 +6,7 @@
   const M = {
     // Basic Materials
     red: new THREE.MeshStandardMaterial({ color: 0xff3333, roughness: 0.6 }),
-    green: new THREE.MeshStandardMaterial({ color: 0x33cc33, roughness: 0.8 }),
+    green: new THREE.MeshStandardMaterial({ color: 0x99ff00, roughness: 0.8 }), // Neon/Lime green for contrast
     blue: new THREE.MeshStandardMaterial({ color: 0x3366ff, roughness: 0.5 }),
     yellow: new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.7 }),
     orange: new THREE.MeshStandardMaterial({ color: 0xff8800, roughness: 0.6 }),
@@ -22,8 +22,9 @@
     biscuit: new THREE.MeshStandardMaterial({ color: 0xeebb77, roughness: 0.9 }),
     choc: new THREE.MeshStandardMaterial({ color: 0x3e1800, roughness: 0.9 }),
     stem: new THREE.MeshStandardMaterial({ color: 0x228b22, roughness: 0.9 }),
-    teal: new THREE.MeshStandardMaterial({ color: 0x008080, roughness: 0.7 }),
+    teal: new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.7 }), // Bright Cyan
     darkgreen: new THREE.MeshStandardMaterial({ color: 0x006400, roughness: 0.9 }),
+    lime: new THREE.MeshStandardMaterial({ color: 0xccff00, roughness: 0.5 }),
   };
 
   // Helper to build compound items
@@ -172,6 +173,11 @@
       const g = buildGroup();
       const w = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), M.green);
       w.scale.set(1.2, 0.8, 1.2); g.add(w);
+      // Add white stripes for contrast
+      for (let i = 0; i < 4; i++) {
+        const s = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.02, 12), M.white);
+        s.rotation.z = (i / 4) * Math.PI; g.add(s);
+      }
       return g;
     },
     cupcake: () => {
@@ -206,6 +212,9 @@
       const g = buildGroup();
       const l = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), M.green);
       l.scale.set(1, 0.1, 2); l.rotation.z = 0.2; g.add(l);
+      // White rim for visibility
+      const r = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.02, 4, 12), M.white);
+      r.rotation.x = Math.PI / 2; r.scale.z = 2; g.add(r);
       return g;
     },
     shell: () => {
@@ -371,6 +380,7 @@
       const b = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), M.green); b.scale.y = 0.7; g.add(b);
       const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), M.white); e1.position.set(0.12, 0.15, 0.1); g.add(e1);
       const e2 = e1.clone(); e2.position.x = -0.12; g.add(e2);
+      // Give it big white eyes to pop
       return g;
     },
     pawprint: () => {
@@ -480,6 +490,9 @@
   window.ITEMS_LIST = catalog;
   window.ITEMS = {};
   catalog.forEach(item => {
+    // Add glowing light property to every item for ultimate contrast
+    item.glow = item.color || 0xffffff;
+    item.popColors = [0xffffff, item.color || 0xffffff];
     window.ITEMS[item.id] = item;
   });
 
