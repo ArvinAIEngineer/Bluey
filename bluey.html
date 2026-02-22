@@ -449,7 +449,16 @@
     // READ URL PARAMS
     const params = new URLSearchParams(window.location.search);
     const itmId = params.get('item') || 'biscuit';
-    const ITEM_DEF = window.ITEMS[itmId] || window.ITEMS['biscuit'];
+    let ITEM_DEF = window.ITEMS[itmId] || window.ITEMS['biscuit'];
+
+    // Robust fallback using URL params if specific definition not found
+    if (!window.ITEMS[itmId]) {
+      ITEM_DEF = Object.assign({}, ITEM_DEF, {
+        name: params.get('label') || ITEM_DEF.name,
+        emoji: params.get('emoji') || ITEM_DEF.emoji
+      });
+    }
+
     const TOTAL = parseInt(params.get('count')) || 12;
     const TIME_LIMIT = parseInt(params.get('time')) || 60;
 
@@ -680,7 +689,17 @@
 
     function endGame(won) { gameRunning = false; clearInterval(timerInterval); timerPill.classList.remove('urgent'); if (!won && player.blastAction) { player.blasting = true; player.blastAction.reset().play(); } document.getElementById('s-title').textContent = won ? "That's Fancy!" : "Oh No! Time's Up!"; document.getElementById('s-sub').textContent = won ? `You got all the ${ITEM_DEF.name || ITEM_DEF.label.toLowerCase()}! Well done! 🐾` : "Run out of time! Try again!"; const stats = document.getElementById('s-stats'); stats.style.display = 'block'; stats.innerHTML = `${ITEM_DEF.emoji} ${ITEM_DEF.name || ITEM_DEF.label}: ${collected}/${TOTAL}<br>⭐ Score: ${score}`; document.getElementById('play-btn').textContent = 'Play Again! 🐾'; screen.classList.remove('hidden'); }
 
-    function animate(now) { requestAnimationFrame(animate); const dt = Math.min((now - lastTime) / 1000, 0.05); lastTime = now; if (player.mixer && player.blasting) player.mixer.update(dt); if (gameRunning && player.group) { let dx = 0, dz = 0; if (keys['KeyW'] || keys['ArrowUp']) dz -= 1; if (keys['KeyS'] || keys['ArrowDown']) dz += 1; if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1; if (keys['KeyD'] || keys['ArrowRight']) dx += 1; if (joy.active) { dx += joy.dx; dz += joy.dz; } const moving = Math.hypot(dx, dz) > 0.1; if (moving) { const len = Math.hypot(dx, dz); dx /= len; dz /= len; const nx = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.x + dx * player.speed * dt)); const nz = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.z + dz * player.speed * dt)); if (!obstacles.some(o => Math.hypot(nx - o.x, nz - o.z) < o.r + player.radius)) { player.x = nx; player.z = nz; } player.facing = Math.atan2(dx, dz); } const bobY = moving ? Math.sin(now * 0.013) * 0.055 : Math.sin(now * 0.004) * 0.02; player.group.position.set(player.x, bobY, player.z); player.group.rotation.y = player.facing; playerSpot.position.set(player.x, 7, player.z); playerSpot.target.position.set(player.x, 0, player.z); playerSpot.target.updateMatrixWorld(); const t = now / 1000; for (const b of collectibles) { if (b.collected) continue; b.mesh.rotation.y = t * 1.8 + b.phase; b.mesh.position.y = 0.45 + Math.sin(t * 2.5 + b.phase) * 0.1; if (Math.hypot(player.x - b.x, player.z - b.z) < 1.0) { b.collected = true; collectGroup.remove(b.mesh); spawnParticles(b.x, b.z); score += 10; collected++; updateHUD(); showPopup(); if (collected >= TOTAL) endGame(true); } } camera.position.x += (player.x * 0.3 - camera.position.x) * 0.07; camera.position.z += (player.z * 0.3 + 18 - camera.position.z) * 0.07; camera.position.y += (14 - camera.position.y) * 0.05; camera.lookAt(player.x, 0.8, player.z); } for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.life -= dt * 1.6; if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); continue; } p.mesh.position.x += p.vx * dt; p.mesh.position.y += p.vy * dt; p.mesh.position.z += p.vz * dt; p.vy -= 9.8 * dt; p.mesh.material.opacity = p.life; } renderer.render(scene, camera); }
+    function animate(now) {
+      requestAnimationFrame(animate); const dt = Math.min((now - lastTime) / 1000, 0.05); lastTime = now; if (player.mixer && player.blasting) player.mixer.update(dt); if (gameRunning && player.group) {
+        let dx = 0, dz = 0; if (keys['KeyW'] || keys['ArrowUp']) dz -= 1; if (keys['KeyS'] || keys['ArrowDown']) dz += 1; if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1; if (keys['KeyD'] || keys['ArrowRight']) dx += 1; if (joy.active) { dx += joy.dx; dz += joy.dz; } const moving = Math.hypot(dx, dz) > 0.1; if (moving) { const len = Math.hypot(dx, dz); dx /= len; dz /= len; const nx = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.x + dx * player.speed * dt)); const nz = Math.max(-BOUND + 0.6, Math.min(BOUND - 0.6, player.z + dz * player.speed * dt)); if (!obstacles.some(o => Math.hypot(nx - o.x, nz - o.z) < o.r + player.radius)) { player.x = nx; player.z = nz; } player.facing = Math.atan2(dx, dz); } const bobY = moving ? Math.sin(now * 0.013) * 0.055 : Math.sin(now * 0.004) * 0.02; player.group.position.set(player.x, bobY, player.z); player.group.rotation.y = player.facing; playerSpot.position.set(player.x, 7, player.z); playerSpot.target.position.set(player.x, 0, player.z); playerSpot.target.updateMatrixWorld(); const t = now / 1000; for (const b of collectibles) {
+          if (b.collected) continue; b.mesh.rotation.y = t * 1.8 + b.phase; b.mesh.position.y = 0.45 + Math.sin(t * 2.5 + b.phase) * 0.1;
+          if (Math.hypot(player.x - b.x, player.z - b.z) < 1.4) {
+            b.collected = true; collectGroup.remove(b.mesh); spawnParticles(b.x, b.z); score += 10; collected++; updateHUD(); showPopup(); if (collected >= TOTAL) endGame(true);
+          }
+        }
+        camera.position.x += (player.x * 0.3 - camera.position.x) * 0.07; camera.position.z += (player.z * 0.3 + 18 - camera.position.z) * 0.07; camera.position.y += (14 - camera.position.y) * 0.05; camera.lookAt(player.x, 0.8, player.z);
+      } for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.life -= dt * 1.6; if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); continue; } p.mesh.position.x += p.vx * dt; p.mesh.position.y += p.vy * dt; p.mesh.position.z += p.vz * dt; p.vy -= 9.8 * dt; p.mesh.material.opacity = p.life; } renderer.render(scene, camera);
+    }
     // Music logic
     const bgMusic = new Audio('./bluey.mp3');
     bgMusic.loop = true;

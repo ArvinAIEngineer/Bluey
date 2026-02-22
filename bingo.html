@@ -463,7 +463,17 @@
     // READ URL PARAMS
     const params = new URLSearchParams(window.location.search);
     const itmId = params.get('item') || 'flower';
-    const ITEM_DEF = window.ITEMS[itmId] || window.ITEMS['flower'];
+    let ITEM_DEF = window.ITEMS[itmId] || window.ITEMS['flower'];
+
+    // Robust fallback using URL params if specific definition not found
+    if (!window.ITEMS[itmId]) {
+      ITEM_DEF = Object.assign({}, ITEM_DEF, {
+        name: params.get('label') || ITEM_DEF.name,
+        label: params.get('label') || ITEM_DEF.label,
+        emoji: params.get('emoji') || ITEM_DEF.emoji
+      });
+    }
+
     const TOTAL = parseInt(params.get('count')) || 12;
     const TIME_LIMIT = parseInt(params.get('time')) || 60;
 
@@ -1052,7 +1062,7 @@
           if (f.collected) continue;
           f.mesh.rotation.y = t * 1.5 + f.phase;
           f.mesh.position.y = 0.3 + Math.sin(t * 2.5 + f.phase) * 0.1;
-          if (Math.hypot(player.x - f.x, player.z - f.z) < 1.3) {
+          if (Math.hypot(player.x - f.x, player.z - f.z) < 1.6) {
             f.collected = true; collectGroup.remove(f.mesh);
             spawnParticles(f.x, f.z);
             score += 10; collected++; updateHUD(); showPopup();

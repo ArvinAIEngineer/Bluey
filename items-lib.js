@@ -147,7 +147,29 @@
       const c = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.2, 0.3, 8, 1, true), M.gold);
       c.material.side = THREE.DoubleSide; g.add(c);
       const gem = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), M.red);
-      gem.position.set(0, 0, 0.25); g.add(gem);
+      gem.position.set(0, 0.15, 0); g.add(gem);
+      return g;
+    },
+    orange: () => {
+      const g = buildGroup();
+      const a = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), M.orange);
+      g.add(a);
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.1), M.brown);
+      stem.position.y = 0.25; g.add(stem);
+      return g;
+    },
+    strawberry: () => {
+      const g = buildGroup();
+      const s = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.4, 8), M.red);
+      s.rotation.x = Math.PI; g.add(s);
+      const l = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), M.green);
+      l.scale.set(1.5, 0.2, 1.5); l.position.y = 0.2; g.add(l);
+      return g;
+    },
+    watermelon: () => {
+      const g = buildGroup();
+      const w = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), M.green);
+      w.scale.set(1.2, 0.8, 1.2); g.add(w);
       return g;
     }
   };
@@ -159,28 +181,35 @@
     { id: 'biscuit', name: 'Chocolate Biscuit', emoji: '🍪', cat: 'Food', msg: 'Yum!', color: 0xeebb77, build: builders.biscuit },
     { id: 'apple', name: 'Red Apple', emoji: '🍎', cat: 'Food', msg: 'Crunchy!', color: 0xff3333, build: builders.apple },
     { id: 'banana', name: 'Banana', emoji: '🍌', cat: 'Food', msg: 'Monkey time!', color: 0xffcc00, build: builders.banana },
+    { id: 'orange', name: 'Orange', emoji: '🍊', cat: 'Food', msg: 'Zesty!', color: 0xff8800, build: builders.orange },
+    { id: 'strawberry', name: 'Strawberry', emoji: '🍓', cat: 'Food', msg: 'Sweet!', color: 0xff3333, build: builders.strawberry },
+    { id: 'watermelon', name: 'Watermelon', emoji: '🍉', cat: 'Food', msg: 'Refreshing!', color: 0x33cc33, build: builders.watermelon },
     { id: 'carrot', name: 'Carrot', emoji: '🥕', cat: 'Food', msg: 'What\'s up doc?', color: 0xff8800, build: builders.carrot },
-    
+
     // NATURE
+    { id: 'flower', name: 'Flower', emoji: '🌸', cat: 'Nature', msg: 'So pretty!', color: 0xff66bb, build: builders.flower },
     { id: 'flower_pink', name: 'Pink Flower', emoji: '🌸', cat: 'Nature', msg: 'So pretty!', color: 0xff66bb, build: () => builders.flower(M.pink) },
     { id: 'flower_red', name: 'Red Flower', emoji: '🌺', cat: 'Nature', msg: 'Lovely!', color: 0xff3333, build: () => builders.flower(M.red) },
     { id: 'flower_sun', name: 'Sunflower', emoji: '🌻', cat: 'Nature', msg: 'Sunny!', color: 0xffcc00, build: () => builders.flower(M.yellow) },
     { id: 'mushroom', name: 'Mushroom', emoji: '🍄', cat: 'Nature', msg: 'Fungi!', color: 0xff3333, build: builders.mushroom },
-    
+    { id: 'star', name: 'Star', emoji: '⭐', cat: 'Treasures', msg: 'Shiny!', color: 0xffcc00, build: builders.star },
+
     // TOYS
+    { id: 'ball', name: 'Ball', emoji: '⚽', cat: 'Toys', msg: 'Bounce!', color: 0xff3333, build: builders.ball },
     { id: 'ball_red', name: 'Red Ball', emoji: '🔴', cat: 'Toys', msg: 'Bounce!', color: 0xff3333, build: () => builders.ball(M.red) },
     { id: 'ball_blue', name: 'Blue Ball', emoji: '🔵', cat: 'Toys', msg: 'Catch!', color: 0x3366ff, build: () => builders.ball(M.blue) },
     { id: 'ball_green', name: 'Green Ball', emoji: '🟢', cat: 'Toys', msg: 'Throw it!', color: 0x33cc33, build: () => builders.ball(M.green) },
     { id: 'ball_yellow', name: 'Yellow Ball', emoji: '🟡', cat: 'Toys', msg: 'Rolland roll!', color: 0xffcc00, build: () => builders.ball(M.yellow) },
-    
+
     // TREASURES
     { id: 'coin', name: 'Gold Coin', emoji: '🪙', cat: 'Treasures', msg: 'Rich!', color: 0xffbb00, build: builders.coin },
     { id: 'gem', name: 'Magic Gem', emoji: '💎', cat: 'Treasures', msg: 'Shiny!', color: 0x00ffff, build: builders.gem },
     { id: 'star_gold', name: 'Gold Star', emoji: '⭐', cat: 'Treasures', msg: 'Superstar!', color: 0xffcc00, build: builders.star },
     { id: 'star_glow', name: 'Glowing Star', emoji: '🌟', cat: 'Treasures', msg: 'It glows!', color: 0xffffff, build: builders.star },
     { id: 'present', name: 'Present', emoji: '🎁', cat: 'Treasures', msg: 'Surprise!', color: 0x3366ff, build: builders.present },
+    { id: 'gift', name: 'Gift', emoji: '🎁', cat: 'Treasures', msg: 'Surprise!', color: 0x3366ff, build: builders.present },
     { id: 'crown', name: 'Crown', emoji: '👑', cat: 'Treasures', msg: 'Royal!', color: 0xffbb00, build: builders.crown },
-    
+
     // PETS / ANIMAL
     { id: 'bone', name: 'Dog Bone', emoji: '🦴', cat: 'Animals', msg: 'Woof!', color: 0xffffff, build: builders.bone },
   ];
